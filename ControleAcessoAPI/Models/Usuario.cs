@@ -9,8 +9,6 @@ namespace ControleAcessoAPI.Models
         public string SenhaHash { get; set; } = string.Empty;
         public bool Ativo { get; set; } = true;
 
-        public ICollection<RequisicaoDeAcesso>? RequisicoesFeitas { get; set; }
-        public ICollection<RegistroAcesso>? RegistrosAutorizados { get; set; }
     }
 
 }
