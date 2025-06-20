@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ControleAcessoAPI.Models;
 
+namespace ControleAcessoAPI.Controllers;
+
 [ApiController]
 [Route("api/[controller]")]
 public class UsuariosController : ControllerBase
@@ -27,25 +29,6 @@ public class UsuariosController : ControllerBase
         }
     }
 
-    [HttpPost]
-    public async Task<ActionResult<Usuario>> Create(Usuario usuario)
-    {
-        try
-        {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-            var funcoesValidas = new[] { "porteiro", "diretor", "coordenador", "opp", "aqv", "bibliotecaria", "docente" };
-            if (!funcoesValidas.Contains(usuario.Funcao?.ToLower()))
-                return BadRequest("Função inválida.");
-
-            await _supabase.From<Usuario>().Insert(usuario);
-            return CreatedAtAction(nameof(GetById), new { id = usuario.Id }, usuario);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Erro interno: {ex.Message}");
-        }
-    }
-
     [HttpGet("{id}")]
     public async Task<ActionResult<Usuario>> GetById(int id)
     {
@@ -61,6 +44,36 @@ public class UsuariosController : ControllerBase
         }
     }
 
+    [HttpPost]
+    public async Task<ActionResult<Usuario>> Create(Usuario usuario)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var funcoesValidas = new[] { "porteiro", "diretor", "coordenador", "opp", "aqv", "bibliotecaria", "docente" };
+            if (!funcoesValidas.Contains(usuario.Funcao?.ToLower()))
+                return BadRequest("Função inválida.");
+
+            await _supabase.From<Usuario>().Insert(usuario);
+            var responseUsuario = new
+            {
+                id = usuario.Id,
+                nome = usuario.Nome,
+                funcao = usuario.Funcao,
+                email = usuario.Email,
+                ativo = usuario.Ativo
+            };
+            return CreatedAtAction(nameof(GetById), new { id = usuario.Id }, responseUsuario);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Erro interno: {ex.Message}");
+        }
+    }
+
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, Usuario usuario)
     {
@@ -68,6 +81,10 @@ public class UsuariosController : ControllerBase
         {
             if (id != usuario.Id) return BadRequest();
             if (!ModelState.IsValid) return BadRequest(ModelState);
+            var funcoesValidas = new[] { "porteiro", "diretor", "coordenador", "opp", "aqv", "bibliotecaria", "docente" };
+            if (!funcoesValidas.Contains(usuario.Funcao?.ToLower()))
+                return BadRequest("Função inválida.");
+
             await _supabase.From<Usuario>().Where(u => u.Id == id).Update(usuario);
             return NoContent();
         }

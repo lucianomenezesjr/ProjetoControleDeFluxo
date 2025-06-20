@@ -29,11 +29,10 @@ namespace ControleAcessoAPI.Models
         public string Email { get; set; } = string.Empty;
 
         [Column("senha_hash")]
-        [Required]
-        [JsonIgnore] // Ignorar na serialização
         public string SenhaHash { get; set; } = string.Empty;
 
         [Column("ativo")]
         public bool Ativo { get; set; } = true;
     }
+
 }

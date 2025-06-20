@@ -1,19 +1,26 @@
-using Microsoft.Extensions.Configuration;
 using Supabase;
+using Microsoft.AspNetCore.Mvc.NewtonsoftJson; // Adicione este using
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-
+// Configuração do JSON usando Newtonsoft
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options =>
     {
         options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.DefaultContractResolver();
         options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
     });
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
+builder.Services.AddEndpointsApiExplorer();
+
+// Configuração do Swagger sem tentar usar AddNewtonsoftJson diretamente
+builder.Services.AddSwaggerGen(c =>
+{
+    // Configurações do Swagger aqui
+    // Se precisar configurar o serializador, faça através de DocumentFilter ou outras opções
+});
+
+// Configuração do Supabase
 var supabaseUrl = builder.Configuration["Supabase:Url"];
 if (string.IsNullOrEmpty(supabaseUrl))
 {
@@ -26,8 +33,17 @@ if (string.IsNullOrEmpty(supabaseKey))
     throw new ArgumentNullException(nameof(supabaseKey), "A chave do Supabase não foi configurada no appsettings.json.");
 }
 
-var supabase = new Supabase.Client(supabaseUrl, supabaseKey, new SupabaseOptions { AutoConnectRealtime = true });
-builder.Services.AddSingleton(supabase);
+builder.Services.AddSingleton(provider => 
+{
+    var client = new Supabase.Client(supabaseUrl, supabaseKey, new SupabaseOptions 
+    { 
+        AutoConnectRealtime = true,
+        AutoRefreshToken = true
+    });
+    
+    client.InitializeAsync().Wait();
+    return client;
+});
 
 var app = builder.Build();
 
@@ -37,6 +53,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
