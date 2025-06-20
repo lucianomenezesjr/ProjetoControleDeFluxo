@@ -152,3 +152,6 @@ C:\Users\lucia\Documents\ProjetoControleDeFluxo\ControleAcessoAPI\bin\Debug\net9
 C:\Users\lucia\Documents\ProjetoControleDeFluxo\ControleAcessoAPI\bin\Debug\net9.0\System.Reactive.dll
 C:\Users\lucia\Documents\ProjetoControleDeFluxo\ControleAcessoAPI\bin\Debug\net9.0\Websocket.Client.dll
 C:\Users\lucia\Documents\ProjetoControleDeFluxo\ControleAcessoAPI\bin\Debug\net9.0\Microsoft.IO.RecyclableMemoryStream.dll
+C:\Users\lucia\Documents\ProjetoControleDeFluxo\ControleAcessoAPI\bin\Debug\net9.0\Microsoft.AspNetCore.JsonPatch.dll
+C:\Users\lucia\Documents\ProjetoControleDeFluxo\ControleAcessoAPI\bin\Debug\net9.0\Microsoft.AspNetCore.Mvc.NewtonsoftJson.dll
+C:\Users\lucia\Documents\ProjetoControleDeFluxo\ControleAcessoAPI\bin\Debug\net9.0\Newtonsoft.Json.Bson.dll

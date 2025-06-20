@@ -1,62 +1,93 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ControleAcessoAPI.Data;
 using ControleAcessoAPI.Models;
-
-namespace ControleAcessoAPI.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 public class UsuariosController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly Supabase.Client _supabase;
 
-    public UsuariosController(AppDbContext context)
+    public UsuariosController(Supabase.Client supabase)
     {
-        _context = context;
+        _supabase = supabase ?? throw new ArgumentNullException(nameof(supabase));
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Usuario>>> GetAll()
     {
-        return await _context.Usuarios.ToListAsync();
-    }
-
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Usuario>> GetById(int id)
-    {
-        var usuario = await _context.Usuarios.FindAsync(id);
-        return usuario == null ? NotFound() : Ok(usuario);
+        try
+        {
+            var result = await _supabase.From<Usuario>().Get();
+            return Ok(result.Models);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Erro interno: {ex.Message}");
+        }
     }
 
     [HttpPost]
     public async Task<ActionResult<Usuario>> Create(Usuario usuario)
     {
-        _context.Usuarios.Add(usuario);
-        await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { id = usuario.Id }, usuario);
+        try
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var funcoesValidas = new[] { "porteiro", "diretor", "coordenador", "opp", "aqv", "bibliotecaria", "docente" };
+            if (!funcoesValidas.Contains(usuario.Funcao?.ToLower()))
+                return BadRequest("Função inválida.");
+
+            await _supabase.From<Usuario>().Insert(usuario);
+            return CreatedAtAction(nameof(GetById), new { id = usuario.Id }, usuario);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Erro interno: {ex.Message}");
+        }
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<Usuario>> GetById(int id)
+    {
+        try
+        {
+            var usuario = await _supabase.From<Usuario>().Where(u => u.Id == id).Single();
+            if (usuario == null) return NotFound();
+            return Ok(usuario);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Erro interno: {ex.Message}");
+        }
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, Usuario usuario)
     {
-        if (id != usuario.Id) return BadRequest();
-
-        _context.Entry(usuario).State = EntityState.Modified;
-        await _context.SaveChangesAsync();
-
-        return NoContent();
+        try
+        {
+            if (id != usuario.Id) return BadRequest();
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            await _supabase.From<Usuario>().Where(u => u.Id == id).Update(usuario);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Erro interno: {ex.Message}");
+        }
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var usuario = await _context.Usuarios.FindAsync(id);
-        if (usuario == null) return NotFound();
-
-        _context.Usuarios.Remove(usuario);
-        await _context.SaveChangesAsync();
-
-        return NoContent();
+        try
+        {
+            await _supabase.From<Usuario>().Where(u => u.Id == id).Delete();
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Erro interno: {ex.Message}");
+        }
     }
 }
