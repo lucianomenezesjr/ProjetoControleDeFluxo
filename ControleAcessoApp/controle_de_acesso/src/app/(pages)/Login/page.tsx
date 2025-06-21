@@ -8,6 +8,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import Image from "next/image";
 import Link from "next/link";
+import Logo from "@/app/components/Logo";
 
 export default function Login() {
   const router = useRouter();
@@ -30,11 +31,11 @@ export default function Login() {
         // ✅ Armazena o token no localStorage
         localStorage.setItem("token", data.Token);
 
-        toast.success("Login realizado com sucesso!", { duration: 3000 });
+        toast.success("Login realizado com sucesso!", { duration: 1500 });
 
         setTimeout(() => {
           router.push("/");
-        }, 3000);
+        }, 1000);
       } else {
         toast.error(data.message || "Erro ao fazer login", { duration: 3000 });
       }
@@ -48,15 +49,9 @@ export default function Login() {
       
 
       {/* Right Section (Login Form) */}
-      <div className="w-full flex items-center justify-center p-4 md:p-6">
+      <div className="w-full flex items-center justify-center p-4">
         <div className="w-full max-w-[500px] space-y-6">
-          <Image
-            src="/senai_logo.png" // Caminho dentro da pasta "public"
-            alt="Logo da empresa"
-            width={4000}
-            height={2000}
-            className="p-8"
-          />
+          <Logo/>
           <h1 className="font-bold text-3xl text-center m-8">
             Bem-vindo ao
             Portal de controle de acesso
