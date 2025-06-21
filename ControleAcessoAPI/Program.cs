@@ -5,8 +5,10 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Adicionar arquivos de configuração
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
+// Configurar serviços
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options =>
     {
@@ -27,6 +29,7 @@ builder.Services.AddSwaggerGen(c =>
     // Configurações do Swagger
 });
 
+// Configurar Supabase
 var supabaseUrl = builder.Configuration["Supabase:Url"];
 if (string.IsNullOrEmpty(supabaseUrl))
 {
@@ -39,19 +42,19 @@ if (string.IsNullOrEmpty(supabaseKey))
     throw new ArgumentNullException(nameof(supabaseKey), "A chave do Supabase não foi configurada no appsettings.json.");
 }
 
-builder.Services.AddSingleton(provider => 
+builder.Services.AddSingleton(provider =>
 {
-    var client = new Supabase.Client(supabaseUrl, supabaseKey, new SupabaseOptions 
-    { 
+    var client = new Supabase.Client(supabaseUrl, supabaseKey, new SupabaseOptions
+    {
         AutoConnectRealtime = true,
         AutoRefreshToken = true
     });
-    
+
     client.InitializeAsync().Wait();
     return client;
 });
 
-// Adicionar autenticação JWT
+// Configurar autenticação JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -69,7 +72,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
+// Configurar CORS antes de Build
+var corsPolicyName = "AllowNextJS";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(corsPolicyName, policy =>
+    {
+        policy.WithOrigins("http://localhost:3000") // Next.js dev
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+        //.AllowCredentials(); // Descomente se usar cookies
+    });
+});
+
 var app = builder.Build();
+
+// Usar middleware CORS
+app.UseCors(corsPolicyName);
 
 if (app.Environment.IsDevelopment())
 {
