@@ -3,6 +3,8 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation'
 import Logo from '@/app/components/Logo'
+import LoaderSimple from '../LoaderSimple';
+
 
 export default function Carregando(){
 
@@ -11,7 +13,7 @@ export default function Carregando(){
   useEffect(() => {
     const timer = setTimeout(() => {
       router.push('/Login');
-    }, 1500);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [router]);
@@ -24,6 +26,7 @@ export default function Carregando(){
                         Bem-vindo ao
                         Portal de controle de acesso
                     </h1>
+                    <LoaderSimple/>
                 </div>
             </div>
         </div>
