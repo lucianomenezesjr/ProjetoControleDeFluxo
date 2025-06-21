@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import {Montserrat} from 'next/font/google';
 import { Toaster } from 'sonner';
-import { ThemeProvider } from "@/app/components/theme-provider";
+import { ThemeProvider } from "@/app/components/Theme-provider";
 
 export const metadata: Metadata = {
   title: "Controle de Acesso",
