@@ -26,20 +26,27 @@ export default function Login() {
       });
 
       const data = await response.json();
+      console.log('Resposta do servidor:', data); // Log para depuração
 
       if (response.ok) {
-        // ✅ Armazena o token no localStorage
-        localStorage.setItem("token", data.Token);
-
+        // ✅ Armazena o token e o usuário no localStorage
+        localStorage.setItem("token", data.token); // Ajustado para 'token' em vez de 'Token'
+        if (data.user && typeof data.user === "object") {
+          localStorage.setItem("user", JSON.stringify(data.user)); // Ajustado para 'user' em vez de 'User'
+        } else {
+          console.error("Dados do usuário não encontrados na resposta:", data);
+          toast.error("Erro: Dados do usuário não retornados pelo servidor");
+          return;
+        }
         toast.success("Login realizado com sucesso!", { duration: 1500 });
-
         setTimeout(() => {
-          router.push("/");
+          router.push("/Home");
         }, 1000);
       } else {
         toast.error(data.message || "Erro ao fazer login", { duration: 3000 });
       }
     } catch (error) {
+      console.error("Erro na conexão com o servidor:", error);
       toast.error("Erro na conexão com o servidor");
     }
   };
@@ -58,7 +65,7 @@ export default function Login() {
           </h1>
           <div className="text-center m-8 text-sm">
             Não tem conta?{" "}
-            <a href="#" className="underline underline-offset-4">
+            <a href="/Cadastro" className="underline underline-offset-4">
               Cadastre-se
             </a>
           </div>
@@ -92,7 +99,7 @@ export default function Login() {
                     required
                      />
                 </div>
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full text-white">
                   Entrar
                 </Button>
               </div>  
