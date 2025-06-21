@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import {Montserrat} from 'next/font/google';
 import { Toaster } from 'sonner';
+import { ThemeProvider } from "@/app/components/theme-provider";
 
 export const metadata: Metadata = {
   title: "Controle de Acesso",
@@ -18,9 +19,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-br">
+    <html lang="pt-br" suppressHydrationWarning>
       <body className={font.className}>
-        {children}
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          {children}
+        </ThemeProvider>
         <Toaster richColors position="bottom-left" />
       </body>
     </html>

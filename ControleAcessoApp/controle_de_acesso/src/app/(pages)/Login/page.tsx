@@ -1,10 +1,13 @@
 'use client';
 
-import { useEffect, useState } from "react";
-import BotaoSubmit from "@/app/components/BotaoSubmit";
-import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
+import Image from "next/image";
+import Link from "next/link";
 
 export default function Login() {
   const router = useRouter();
@@ -25,7 +28,7 @@ export default function Login() {
 
       if (response.ok) {
         // ✅ Armazena o token no localStorage
-        localStorage.setItem("token", data.access_token);
+        localStorage.setItem("token", data.Token);
 
         toast.success("Login realizado com sucesso!", { duration: 3000 });
 
@@ -45,42 +48,59 @@ export default function Login() {
       
 
       {/* Right Section (Login Form) */}
-      <div className="w-full bg-white flex items-center justify-center p-4 md:p-6">
+      <div className="w-full flex items-center justify-center p-4 md:p-6">
         <div className="w-full max-w-[500px] space-y-6">
-          <h1 className="font-bold text-2xl md:text-3xl text-[#1B1B1B] text-center md:text-left">
-            Conectar
+          <Image
+            src="/senai_logo.png" // Caminho dentro da pasta "public"
+            alt="Logo da empresa"
+            width={4000}
+            height={2000}
+            className="p-8"
+          />
+          <h1 className="font-bold text-3xl text-center m-8">
+            Bem-vindo ao
+            Portal de controle de acesso
           </h1>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4 md:gap-6">
-            <input
-              type="text"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 md:p-2 border border-gray-400 rounded text-gray-600 placeholder-gray-400"
-              placeholder="Email"
-              required
-            />
-            <input
-              type="password"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              className="w-full p-3 md:p-2 border border-gray-400 rounded text-gray-600 placeholder-gray-400"
-              placeholder="Senha"
-              required
-            />
-            <Link
-              className="text-[#1B1B1B] text-right hover:text-black hover:underline text-sm md:text-base"
-              href="/EsqueciSenha"
-            >
-              Esqueceu a senha?
-            </Link>
-            <BotaoSubmit label="Entrar" />
-            <div className="text-center text-sm md:text-base">
-              <p>
-                Novo usuário?{" "}
-                <Link className="text-[#1B1B1B] hover:text-black hover:underline" href="/Cadastro">
-                  Clique aqui
-                </Link>
-              </p>
+          <div className="text-center m-8 text-sm">
+            Não tem conta?{" "}
+            <a href="#" className="underline underline-offset-4">
+              Cadastre-se
+            </a>
+          </div>
+          <form onSubmit={handleSubmit}>
+            <div className="flex flex-col gap-6">
+              
+              <div className="grid gap-6">
+                <div className="grid gap-3">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+
+                    id="email"
+                    type="email"
+                    placeholder="exemplo@senai.br"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="grid gap-3">
+                  <div className="flex items-center">
+                    <Label htmlFor="password">Senha</Label>
+                    
+                  </div>
+                  <Input 
+                    id="password" 
+                    type="password"
+                    value={senha}
+                    onChange={(e) => setSenha(e.target.value)}
+                    placeholder="Senha"
+                    required
+                     />
+                </div>
+                <Button type="submit" className="w-full">
+                  Entrar
+                </Button>
+              </div>  
             </div>
           </form>
         </div>
