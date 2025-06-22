@@ -17,7 +17,7 @@ interface User {
   ativo: boolean;
 }
 
-export default function Page() {
+export default function UsuariosPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +65,7 @@ export default function Page() {
 
       if (!response.ok) {
         throw new Error("Não autorizado ou erro ao buscar usuários");
+
       }
 
       const data = await response.json();
@@ -72,6 +73,9 @@ export default function Page() {
     } catch (err) {
       console.error("Erro ao buscar lista de usuários:", err);
       setError("Erro ao carregar a lista de usuários");
+      setTimeout(() => {
+          router.push("/Login");
+        }, 5000);
     } finally {
       setLoading(false);
     }
@@ -108,7 +112,9 @@ export default function Page() {
     const token = localStorage.getItem("token");
     if (!token || token === "undefined" || token === "null") {
       toast.error("Usuário não autenticado. Faça login novamente.");
-      router.push("/login");
+      setTimeout(() => {
+          router.push("/Login");
+        }, 5000);
       throw new Error("Token inválido ou ausente");
     }
 

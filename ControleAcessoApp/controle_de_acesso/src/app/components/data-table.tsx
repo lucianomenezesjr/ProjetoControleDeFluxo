@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,9 +9,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { IconDotsVertical, IconGripVertical, IconLoader } from "@tabler/icons-react"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { IconDotsVertical, IconGripVertical, IconLoader } from "@tabler/icons-react";
 import {
   closestCenter,
   DndContext,
@@ -22,15 +22,15 @@ import {
   useSensors,
   type DragEndEvent,
   type UniqueIdentifier,
-} from "@dnd-kit/core"
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers"
+} from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import {
   arrayMove,
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
-} from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   IconChevronDown,
   IconChevronLeft,
@@ -38,7 +38,7 @@ import {
   IconChevronsLeft,
   IconChevronsRight,
   IconLayoutColumns,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -54,14 +54,14 @@ import {
   TableMeta,
   useReactTable,
   VisibilityState,
-} from "@tanstack/react-table"
-import { toast } from "sonner"
-import { z } from "zod"
+} from "@tanstack/react-table";
+import { toast } from "sonner";
+import { z } from "zod";
 
-import { useIsMobile } from "@/hooks/use-mobile"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Drawer,
   DrawerClose,
@@ -71,7 +71,7 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer"
+} from "@/components/ui/drawer";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -79,15 +79,15 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/dropdown-menu";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -95,10 +95,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import {
-  Tabs,
-} from "@/components/ui/tabs"
+} from "@/components/ui/table";
+import { Tabs } from "@/components/ui/tabs";
 
 export const schema = z.object({
   id: z.number(),
@@ -106,7 +104,7 @@ export const schema = z.object({
   email: z.string(),
   funcao: z.string(),
   ativo: z.boolean(),
-})
+});
 type User = z.infer<typeof schema>;
 
 // Extend TableMeta to include onDeleteUser and onEditUser
@@ -116,7 +114,7 @@ interface CustomTableMeta extends TableMeta<User> {
 }
 
 function DragHandle({ id }: { id: number }) {
-  const { attributes, listeners } = useSortable({ id })
+  const { attributes, listeners } = useSortable({ id });
 
   return (
     <Button
@@ -129,7 +127,7 @@ function DragHandle({ id }: { id: number }) {
       <IconGripVertical className="text-muted-foreground size-3" />
       <span className="sr-only">Drag to reorder</span>
     </Button>
-  )
+  );
 }
 
 const columns: ColumnDef<User>[] = [
@@ -196,216 +194,216 @@ const columns: ColumnDef<User>[] = [
     ),
   },
   {
-  id: "actions",
-  cell: ({ row, table }) => {
-    const user = row.original;
-    const onDeleteUser = (table.options.meta as CustomTableMeta)?.onDeleteUser;
-    const onEditUser = (table.options.meta as CustomTableMeta)?.onEditUser;
-    const [deleteOpen, setDeleteOpen] = React.useState(false);
-    const [editOpen, setEditOpen] = React.useState(false);
-    const [isDeleting, setIsDeleting] = React.useState(false);
-    const [isEditing, setIsEditing] = React.useState(false);
-    const [formData, setFormData] = React.useState<User>({
-      id: user.id,
-      nome: user.nome,
-      email: user.email,
-      funcao: user.funcao,
-      ativo: user.ativo,
-    });
+    id: "actions",
+    cell: ({ row, table }) => {
+      const user = row.original;
+      const onDeleteUser = (table.options.meta as CustomTableMeta)?.onDeleteUser;
+      const onEditUser = (table.options.meta as CustomTableMeta)?.onEditUser;
+      const [deleteOpen, setDeleteOpen] = React.useState(false);
+      const [editOpen, setEditOpen] = React.useState(false);
+      const [isDeleting, setIsDeleting] = React.useState(false);
+      const [isEditing, setIsEditing] = React.useState(false);
+      const [formData, setFormData] = React.useState<User>({
+        id: user.id,
+        nome: user.nome,
+        email: user.email,
+        funcao: user.funcao,
+        ativo: user.ativo,
+      });
 
-    const handleInputChange = (
-      e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-    ) => {
-      const { name, value } = e.target;
-      setFormData((prev) => ({
-        ...prev,
-        [name]: name === "ativo" ? value === "true" : value,
-      }));
-    };
+      const handleInputChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+      ) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({
+          ...prev,
+          [name]: name === "ativo" ? value === "true" : value,
+        }));
+      };
 
-    return (
-      <>
-        {/* Delete Dialog */}
-        <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-                size="icon"
-              >
-                <IconDotsVertical />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-32">
-              <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                Editar
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                variant="destructive"
-                onClick={() => setDeleteOpen(true)}
-              >
-                Apagar
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DialogContent aria-describedby="delete-dialog-description">
-            <DialogHeader>
-              <DialogTitle>Confirmar exclusão</DialogTitle>
-              <DialogDescription id="delete-dialog-description">
-                Tem certeza que deseja apagar o usuário {user.nome}? Esta ação não pode ser desfeita.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setDeleteOpen(false);
-                  table.setRowSelection({});
-                }}
-                disabled={isDeleting}
-              >
-                Cancelar
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={async () => {
-                  if (onDeleteUser) {
-                    setIsDeleting(true);
-                    try {
-                      await onDeleteUser(user.id);
-                      setDeleteOpen(false);
-                    } finally {
-                      setIsDeleting(false);
+      return (
+        <>
+          {/* Delete Dialog */}
+          <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+                  size="icon"
+                >
+                  <IconDotsVertical />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-32">
+                <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                  Editar
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => setDeleteOpen(true)}
+                >
+                  Apagar
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DialogContent aria-describedby="delete-dialog-description">
+              <DialogHeader>
+                <DialogTitle>Confirmar exclusão</DialogTitle>
+                <DialogDescription id="delete-dialog-description">
+                  Tem certeza que deseja apagar o usuário {user.nome}? Esta ação não pode ser desfeita.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setDeleteOpen(false);
+                    table.setRowSelection({});
+                  }}
+                  disabled={isDeleting}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={async () => {
+                    if (onDeleteUser) {
+                      setIsDeleting(true);
+                      try {
+                        await onDeleteUser(user.id);
+                        setDeleteOpen(false);
+                      } finally {
+                        setIsDeleting(false);
+                      }
                     }
-                  }
-                }}
-                disabled={isDeleting}
-              >
-                {isDeleting ? (
-                  <IconLoader className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
-                Confirmar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+                  }}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <IconLoader className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  Confirmar
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
-        {/* Edit Dialog */}
-        <Dialog open={editOpen} onOpenChange={setEditOpen}>
-          <DialogContent aria-describedby="edit-dialog-description">
-            <DialogHeader>
-              <DialogTitle>Editar Usuário</DialogTitle>
-              <DialogDescription id="edit-dialog-description">
-                Altere os detalhes do usuário {user.nome} abaixo.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="nome">Nome</Label>
-                <Input
-                  id="nome"
-                  name="nome"
-                  value={formData.nome}
-                  onChange={handleInputChange}
-                  disabled={isEditing}
-                  required
-                />
+          {/* Edit Dialog */}
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogContent aria-describedby="edit-dialog-description">
+              <DialogHeader>
+                <DialogTitle>Editar Usuário</DialogTitle>
+                <DialogDescription id="edit-dialog-description">
+                  Altere os detalhes do usuário {user.nome} abaixo.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="nome">Nome</Label>
+                  <Input
+                    id="nome"
+                    name="nome"
+                    value={formData.nome}
+                    onChange={handleInputChange}
+                    disabled={isEditing}
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    disabled={isEditing}
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="funcao">Função</Label>
+                  <Input
+                    id="funcao"
+                    name="funcao"
+                    value={formData.funcao}
+                    onChange={handleInputChange}
+                    disabled={isEditing}
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="ativo">Status</Label>
+                  <Select
+                    name="ativo"
+                    value={formData.ativo.toString()}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, ativo: value === "true" }))
+                    }
+                    disabled={isEditing}
+                  >
+                    <SelectTrigger id="ativo">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="true">Ativo</SelectItem>
+                      <SelectItem value="false">Inativo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  disabled={isEditing}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="funcao">Função</Label>
-                <Input
-                  id="funcao"
-                  name="funcao"
-                  value={formData.funcao}
-                  onChange={handleInputChange}
-                  disabled={isEditing}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="ativo">Status</Label>
-                <Select
-                  name="ativo"
-                  value={formData.ativo.toString()}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, ativo: value === "true" }))
-                  }
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setEditOpen(false);
+                    setFormData(user); // Reset form data to original user
+                  }}
                   disabled={isEditing}
                 >
-                  <SelectTrigger id="ativo">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="true">Ativo</SelectItem>
-                    <SelectItem value="false">Inativo</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setEditOpen(false);
-                  setFormData(user); // Reset form data to original user
-                }}
-                disabled={isEditing}
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={async () => {
-                  if (onEditUser) {
-                    if (!formData.nome || !formData.email || !formData.funcao) {
-                      toast.error("Por favor, preencha todos os campos obrigatórios.");
-                      return;
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={async () => {
+                    if (onEditUser) {
+                      if (!formData.nome || !formData.email || !formData.funcao) {
+                        toast.error("Por favor, preencha todos os campos obrigatórios.");
+                        return;
+                      }
+                      setIsEditing(true);
+                      try {
+                        await onEditUser(formData);
+                        setEditOpen(false);
+                      } catch (err) {
+                        toast.error("Erro ao editar usuário");
+                      } finally {
+                        setIsEditing(false);
+                      }
                     }
-                    setIsEditing(true);
-                    try {
-                      await onEditUser(formData);
-                      setEditOpen(false);
-                    } catch (err) {
-                      toast.error("Erro ao editar usuário");
-                    } finally {
-                      setIsEditing(false);
-                    }
-                  }
-                }}
-                disabled={isEditing}
-              >
-                {isEditing ? (
-                  <IconLoader className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
-                Salvar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </>
-    );
+                  }}
+                  disabled={isEditing}
+                >
+                  {isEditing ? (
+                    <IconLoader className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  Salvar
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
+      );
+    },
   },
-},
 ];
 
 function DraggableRow({ row }: { row: Row<User> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.original.id,
-  })
+  });
 
   return (
     <TableRow
@@ -424,7 +422,7 @@ function DraggableRow({ row }: { row: Row<User> }) {
         </TableCell>
       ))}
     </TableRow>
-  )
+  );
 }
 
 interface DataTableProps {
@@ -442,13 +440,14 @@ export function DataTable({ data, onDeleteUser, onEditUser }: DataTableProps) {
     pageIndex: 0,
     pageSize: 10,
   });
+  const [searchTerm, setSearchTerm] = React.useState(""); // New state for search
   const sortableId = React.useId();
   const sensors = useSensors(
     useSensor(MouseSensor, {}),
     useSensor(TouchSensor, {}),
     useSensor(KeyboardSensor, {})
   );
-
+  const [globalFilter, setGlobalFilter] = React.useState("");
   const dataIds = React.useMemo<UniqueIdentifier[]>(
     () => data?.map(({ id }) => id) || [],
     [data]
@@ -458,11 +457,12 @@ export function DataTable({ data, onDeleteUser, onEditUser }: DataTableProps) {
     data,
     columns,
     state: {
-      sorting,
-      columnVisibility,
-      rowSelection,
-      columnFilters,
-      pagination,
+    sorting,
+    columnVisibility,
+    rowSelection,
+    columnFilters,
+    pagination,
+    globalFilter,
     },
     meta: { onDeleteUser, onEditUser } as CustomTableMeta,
     getRowId: (row) => row.id.toString(),
@@ -478,7 +478,15 @@ export function DataTable({ data, onDeleteUser, onEditUser }: DataTableProps) {
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
+    globalFilterFn: "includesString", // Case-insensitive search across all columns
   });
+
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const value = event.target.value;
+  setSearchTerm(value);
+  setGlobalFilter(value); // 👈 Usa filtro global ao invés de por coluna
+  };
+
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -497,7 +505,11 @@ export function DataTable({ data, onDeleteUser, onEditUser }: DataTableProps) {
           View
         </Label>
         <Select defaultValue="outline">
-          <SelectTrigger className="flex w-fit @4xl/main:hidden" size="sm" id="view-selector">
+          <SelectTrigger
+            className="flex w-fit @4xl/main:hidden"
+            size="sm"
+            id="view-selector"
+          >
             <SelectValue placeholder="Select a view" />
           </SelectTrigger>
         </Select>
@@ -515,7 +527,8 @@ export function DataTable({ data, onDeleteUser, onEditUser }: DataTableProps) {
               {table
                 .getAllColumns()
                 .filter(
-                  (column) => typeof column.accessorFn !== "undefined" && column.getCanHide()
+                  (column) =>
+                    typeof column.accessorFn !== "undefined" && column.getCanHide()
                 )
                 .map((column) => (
                   <DropdownMenuCheckboxItem
@@ -530,6 +543,16 @@ export function DataTable({ data, onDeleteUser, onEditUser }: DataTableProps) {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+      </div>
+      {/* Search Bar */}
+      <div className="px-4 lg:px-6 mb-4">
+        <Input
+          type="text"
+          placeholder="Pesquisar por nome, email ou função..."
+          value={searchTerm}
+          onChange={handleSearch}
+          className="w-full max-w-md"
+        />
       </div>
       <div className="overflow-hidden rounded-lg border">
         <DndContext
@@ -547,7 +570,10 @@ export function DataTable({ data, onDeleteUser, onEditUser }: DataTableProps) {
                     <TableHead key={header.id} colSpan={header.colSpan}>
                       {header.isPlaceholder
                         ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -555,7 +581,10 @@ export function DataTable({ data, onDeleteUser, onEditUser }: DataTableProps) {
             </TableHeader>
             <TableBody className="**:data-[slot=table-cell]:first:w-8">
               {table.getRowModel().rows?.length ? (
-                <SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
+                <SortableContext
+                  items={dataIds}
+                  strategy={verticalListSortingStrategy}
+                >
                   {table.getRowModel().rows.map((row) => (
                     <DraggableRow key={row.id} row={row} />
                   ))}
@@ -584,7 +613,7 @@ export function DataTable({ data, onDeleteUser, onEditUser }: DataTableProps) {
             <Select
               value={`${table.getState().pagination.pageSize}`}
               onValueChange={(value) => {
-                table.setPageSize(Number(value))
+                table.setPageSize(Number(value));
               }}
             >
               <SelectTrigger size="sm" className="w-20" id="rows-per-page">
@@ -600,7 +629,8 @@ export function DataTable({ data, onDeleteUser, onEditUser }: DataTableProps) {
             </Select>
           </div>
           <div className="flex w-fit items-center justify-center text-sm font-medium">
-            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+            Page {table.getState().pagination.pageIndex + 1} of{" "}
+            {table.getPageCount()}
           </div>
           <div className="ml-auto flex items-center gap-2 lg:ml-0">
             <Button

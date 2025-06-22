@@ -1,123 +1,207 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import LoaderSimple from '@/app/components/LoaderSimple';
-import Logo from '@/app/components/Logo';
-import { Button } from '@/components/ui/button';
-
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { AppSidebar } from "@/app/components/app-sidebar";
+import { DataTable } from "@/app/components/data-table";
+import { SiteHeader } from "@/app/components/site-header";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { toast } from "sonner";
+import LoaderSimple from "@/app/components/LoaderSimple";
 
 interface User {
   id: number;
   nome: string;
-  funcao: string;
   email: string;
+  funcao: string;
   ativo: boolean;
 }
 
 export default function Home() {
-  const [user, setUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+    const storedUser = localStorage.getItem("user");
+    const storedToken = localStorage.getItem("token");
 
-    if (!storedToken) {
-      router.replace('/');
+    if (storedUser && storedUser !== "undefined") {
+      try {
+        const user = JSON.parse(storedUser);
+        setCurrentUser(user);
+        if (!["coordenador", "diretor", "adm"].includes(user.funcao.toLowerCase())) {
+          toast.error("Acesso negado. Apenas coordenadores, diretores ou administradores podem acessar esta página.");
+          router.push("/Home");
+          return;
+        }
+      } catch (e) {
+        console.error("Erro ao parsear usuário do localStorage:", e);
+        setError("Dados do usuário corrompidos");
+        setLoading(false);
+        return;
+      }
+    } else {
+      setError("Usuário não autenticado");
+      setLoading(false);
+      router.push("/Home");
       return;
     }
 
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setLoading(false);
+    if (storedToken) {
+      fetchUsers(storedToken);
     }
+  }, [router]);
 
-    fetchUserData(storedToken);
-  }, []);
-
-  const fetchUserData = async (token: string) => {
+  const fetchUsers = async (token: string) => {
     try {
-      const response = await fetch('http://localhost:5274/api/Usuarios', {
+      const response = await fetch("http://localhost:5274/api/Usuarios", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error('Não autorizado');
+        throw new Error("Não autorizado ou erro ao buscar usuários");
+
       }
 
-      const users = await response.json();
-      const localUser = JSON.parse(localStorage.getItem('user') || '{}');
-      const loggedInUser = users.find((u: User) => u.email === localUser.Email);
-
-      if (loggedInUser) {
-        setUser(loggedInUser);
-        localStorage.setItem('user', JSON.stringify(loggedInUser));
-      }
-
-      setLoading(false);
+      const data = await response.json();
+      setUsers(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error('Erro ao buscar dados do usuário:', err);
-      setError('Erro ao carregar usuário');
+      console.error("Erro ao buscar lista de usuários:", err);
+      setError("Erro ao carregar a lista de usuários");
+      setTimeout(() => {
+          router.push("/Login");
+        }, 5000);
+    } finally {
       setLoading(false);
-      router.push('/Login');
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    router.push('/Login');
+  const handleDeleteUser = async (userId: number) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Usuário não autenticado");
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5274/api/Usuarios/${userId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao apagar usuário");
+      }
+
+      setUsers(users.filter(user => user.id !== userId));
+      toast.success("Usuário apagado com sucesso");
+    } catch (err) {
+      console.error("Erro ao apagar usuário:", err);
+      toast.error("Erro ao apagar usuário");
+    }
   };
 
-  if (loading) return <div><LoaderSimple /></div>;
-  if (error) return <div>{error}</div>;
+  const handleEditUser = async (updatedUser: User) => {
+    const token = localStorage.getItem("token");
+    if (!token || token === "undefined" || token === "null") {
+      toast.error("Usuário não autenticado. Faça login novamente.");
+      setTimeout(() => {
+          router.push("/Login");
+        }, 5000);
+      throw new Error("Token inválido ou ausente");
+    }
+
+    if (!updatedUser.nome.trim()) {
+      toast.error("Nome é obrigatório.");
+      return;
+    }
+    if (!updatedUser.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updatedUser.email)) {
+      toast.error("Email inválido.");
+      return;
+    }
+    if (!updatedUser.funcao.trim()) {
+      toast.error("Função é obrigatória.");
+      return;
+    }
+    const validFuncoes = ["porteiro", "diretor", "coordenador", "opp", "aqv", "bibliotecaria", "docente"];
+    if (!validFuncoes.includes(updatedUser.funcao.toLowerCase())) {
+      toast.error("Função inválida. Use 'porteiro', 'diretor', 'coordenador', 'opp', 'aqv', 'bibliotecaria' ou 'docente'.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5274/api/Usuarios/${updatedUser.id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: updatedUser.id,
+          nome: updatedUser.nome,
+          funcao: updatedUser.funcao,
+          email: updatedUser.email,
+          ativo: updatedUser.ativo,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erro ao editar usuário: ${errorText}`);
+      }
+
+      setUsers(users.map(user => user.id === updatedUser.id ? updatedUser : user));
+      toast.success("Usuário atualizado com sucesso");
+    } catch (err) {
+      console.error("Erro ao editar usuário:", err);
+      //toast.error(`Erro ao editar usuário: ${err.message}`);
+      throw err;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <LoaderSimple />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="text-center pt-10 text-red-500">{error}</div>;
+  }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-
-      {/* Right Section (User Info and Controls) */}
-      <div className="w-full bg-white flex items-center justify-center p-6">
-        <div className="w-full max-w-md space-y-6">
-          <Logo />
-          <div className="bg-white p-6 rounded-lg shadow-lg text-center">
-            <h1 className="text-3xl font-bold text-gray-800 mb-4">Controle de Entrada e Saída</h1>
-            {user && (
-              <>
-                <p className="text-lg text-gray-600">Bem-vindo, {user.nome}!</p>
-                <p className="text-md text-gray-500">Função: {user.funcao}</p>
-                <p className="text-md text-gray-500">Email: {user.email}</p>
-                <p className="text-md text-gray-500">Status: {user.ativo ? 'Ativo' : 'Inativo'}</p>
-              </>
-            )}
-            <div className="mt-6 space-y-4">
-              <Button
-                //onClick={handleRegisterEntry}
-                className="w-full bg-green-600 text-white hover:bg-green-700"
-              >
-                Registrar Entrada
-              </Button>
-              <Button
-                //onClick={handleRegisterExit}
-                className="w-full bg-yellow-600 text-white hover:bg-yellow-700"
-              >
-                Registrar Saída
-              </Button>
-              <Button
-                onClick={handleLogout}
-                className="w-full bg-red-500 text-white hover:bg-red-600"
-              >
-                Sair
-              </Button>
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": "calc(var(--spacing) * 72)",
+          "--header-height": "calc(var(--spacing) * 12)",
+        } as React.CSSProperties
+      }
+    >
+      <AppSidebar variant="inset" user={currentUser} />
+      <SidebarInset>
+        <SiteHeader />
+        <div className="flex flex-1 flex-col">
+          <div className="@container/main flex flex-1 flex-col gap-2">
+            <div className="flex flex-col gap-4 py-4 mx-5">
+              <h1 className="text-2xl font-bold">Lista de Usuários</h1>
+              <DataTable data={users} onDeleteUser={handleDeleteUser} onEditUser={handleEditUser} />
+              {users.length === 0 && (
+                <p className="text-center mt-4">Nenhum usuário encontrado.</p>
+              )}
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
-
