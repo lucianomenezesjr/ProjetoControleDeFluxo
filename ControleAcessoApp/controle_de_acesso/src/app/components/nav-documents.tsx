@@ -5,7 +5,8 @@ import {
   IconFolder,
   IconShare3,
   IconTrash,
-  IconUsers, // Adicionei a importação do IconUsers
+  IconUsers,
+  IconUsersGroup,
   type Icon,
 } from "@tabler/icons-react"
 
@@ -25,6 +26,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { DropdownMenuTurma } from "./DropdownTurma"
 
 export function NavDocuments({
   items,
@@ -46,7 +48,16 @@ export function NavDocuments({
               <a href="/Usuarios">
                 <IconUsers className="size-5" /> 
                 <span>Lista de usuários</span>
+                
               </a>
+            </SidebarMenuButton>
+            <SidebarMenuButton asChild>
+                <div>
+                    <IconUsersGroup className="size-5" /> 
+                    <DropdownMenuTurma />
+                </div>
+            
+              
             </SidebarMenuButton>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

@@ -8,6 +8,7 @@ import { SiteHeader } from "@/app/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { toast } from "sonner";
 import LoaderSimple from "@/app/components/LoaderSimple";
+import { DropdownMenuTurma } from "@/app/components/DropdownTurma";
 
 interface User {
   id: number;
@@ -194,6 +195,7 @@ export default function UsuariosPage() {
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4 py-4 mx-5">
               <h1 className="text-2xl font-bold">Lista de Usuários</h1>
+              
               <DataTable data={users} onDeleteUser={handleDeleteUser} onEditUser={handleEditUser} />
               {users.length === 0 && (
                 <p className="text-center mt-4">Nenhum usuário encontrado.</p>
