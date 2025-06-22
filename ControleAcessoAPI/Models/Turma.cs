@@ -1,27 +1,24 @@
+using Supabase.Postgrest.Attributes;
+using Supabase.Postgrest.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace ControleAcessoAPI.Models
 {
-    public class Turma
+    [Table("turma")]
+    public class Turma : BaseModel
     {
+        [PrimaryKey("id")]
         public int Id { get; set; }
 
-        [Required]
-        public int CursoId { get; set; }
-        public Curso Curso { get; set; } = null!;
-
+        [Column("nome")]
         [Required]
         [StringLength(50)]
         public string Nome { get; set; } = string.Empty;
 
-        [Required]
-        public TimeOnly HoraEntradaPadrao { get; set; }
-
-        [Required]
-        public TimeOnly HoraSaidaPadrao { get; set; }
-
+        [Column("ativo")]
         public bool Ativo { get; set; } = true;
 
-        public ICollection<Aluno>? Alunos { get; set; }
+        // Propriedade de navegação (opcional, carregada manualmente)
+        // public List<Aluno> Alunos { get; set; } = new List<Aluno>();
     }
 }

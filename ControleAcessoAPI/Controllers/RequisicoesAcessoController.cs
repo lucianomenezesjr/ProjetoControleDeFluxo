@@ -20,7 +20,7 @@ public class RequisicoesAcessoController : ControllerBase
     public async Task<ActionResult<IEnumerable<RequisicaoDeAcesso>>> GetAll()
     {
         return await _context.RequisicoesDeAcesso
-            .Include(r => r.Aluno)
+            //.Include(r => r.Aluno)
             .Include(r => r.RequisicaoPor)
             .ToListAsync();
     }
@@ -37,7 +37,7 @@ public class RequisicoesAcessoController : ControllerBase
     public async Task<ActionResult<RequisicaoDeAcesso>> GetById(int id)
     {
         var requisicao = await _context.RequisicoesDeAcesso
-            .Include(r => r.Aluno)
+            //.Include(r => r.Aluno)
             .Include(r => r.RequisicaoPor)
             .FirstOrDefaultAsync(r => r.Id == id);
 

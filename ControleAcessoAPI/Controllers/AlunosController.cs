@@ -1,67 +1,161 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ControleAcessoAPI.Data;
 using ControleAcessoAPI.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Supabase;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System;
 
-namespace ControleAcessoAPI.Controllers;
-
-[ApiController]
-[Route("api/[controller]")]
-public class AlunosController : ControllerBase
+namespace ControleAcessoAPI.Controllers
 {
-    private readonly AppDbContext _context;
-
-    public AlunosController(AppDbContext context)
+    [Route("api/[controller]")]
+    [ApiController]
+    //[Authorize]
+    public class AlunosController : ControllerBase
     {
-        _context = context;
-    }
+        private readonly Supabase.Client _supabase;
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Aluno>>> GetAll()
-    {
-        return await _context.Alunos
-            .Include(a => a.Turma)
-            .ToListAsync();
-    }
+        public AlunosController(Supabase.Client supabase)
+        {
+            _supabase = supabase ?? throw new ArgumentNullException(nameof(supabase));
+        }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Aluno>> GetById(int id)
-    {
-        var aluno = await _context.Alunos
-            .Include(a => a.Turma)
-            .FirstOrDefaultAsync(a => a.Id == id);
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Aluno>>> GetAlunos()
+        {
+            try
+            {
+                var response = await _supabase.From<Aluno>().Get();
+                return Ok(response.Models);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Erro interno: {ex.Message}" });
+            }
+        }
 
-        return aluno == null ? NotFound() : Ok(aluno);
-    }
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Aluno>> GetAluno(int id)
+        {
+            try
+            {
+                var response = await _supabase.From<Aluno>().Where(a => a.Id == id).Get();
+                var aluno = response.Models.FirstOrDefault();
 
-    [HttpPost]
-    public async Task<ActionResult<Aluno>> Create(Aluno aluno)
-    {
-        _context.Alunos.Add(aluno);
-        await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { id = aluno.Id }, aluno);
-    }
+                if (aluno == null)
+                {
+                    return NotFound(new { message = "Aluno não encontrado" });
+                }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, Aluno aluno)
-    {
-        if (id != aluno.Id) return BadRequest();
+                // Carregar Turma manualmente, se TurmaId existir
+                if (aluno.TurmaId.HasValue)
+                {
+                    var turmaResponse = await _supabase.From<Turma>().Where(t => t.Id == aluno.TurmaId.Value).Get();
+                    var turma = turmaResponse.Models.FirstOrDefault();
+                    // Adicionar Turma como um objeto separado na resposta, se desejar
+                    return Ok(new
+                    {
+                        aluno.Id,
+                        aluno.Nome,
+                        aluno.TurmaId,
+                        aluno.Ativo,
+                        Turma = turma
+                    });
+                }
 
-        _context.Entry(aluno).State = EntityState.Modified;
-        await _context.SaveChangesAsync();
+                return Ok(aluno);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Erro interno: {ex.Message}" });
+            }
+        }
 
-        return NoContent();
-    }
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateAluno(int id, [FromBody] Aluno aluno)
+        {
+            try
+            {
+                if (id != aluno.Id || !ModelState.IsValid)
+                {
+                    return BadRequest(new { message = "ID inválido ou dados inválidos" });
+                }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
-    {
-        var aluno = await _context.Alunos.FindAsync(id);
-        if (aluno == null) return NotFound();
+                var existingAluno = await _supabase.From<Aluno>().Where(a => a.Id == id).Get();
+                if (existingAluno.Models.Count == 0)
+                {
+                    return NotFound(new { message = "Aluno não encontrado" });
+                }
 
-        _context.Alunos.Remove(aluno);
-        await _context.SaveChangesAsync();
+                var updateData = new Aluno
+                {
+                    Id = aluno.Id,
+                    Nome = aluno.Nome,
+                    TurmaId = aluno.TurmaId,
+                    Ativo = aluno.Ativo
+                };
 
-        return NoContent();
+                var response = await _supabase.From<Aluno>().Where(a => a.Id == id).Update(updateData);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Erro interno: {ex.Message}" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<Aluno>> CreateAluno([FromBody] Aluno aluno)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                aluno.Id = 0; // Força o Supabase a gerar um novo ID
+
+                // Validar TurmaId, se fornecido
+                if (aluno.TurmaId.HasValue)
+                {
+                    var turmaResponse = await _supabase.From<Turma>().Where(t => t.Id == aluno.TurmaId.Value).Get();
+                    if (!turmaResponse.Models.Any())
+                    {
+                        ModelState.AddModelError("TurmaId", "A Turma especificada não existe.");
+                        return BadRequest(ModelState);
+                    }
+                }
+
+                var response = await _supabase.From<Aluno>().Insert(aluno);
+                var createdAluno = response.Models.FirstOrDefault();
+
+                if (createdAluno == null)
+                {
+                    return StatusCode(500, new { message = "Falha ao criar o aluno" });
+                }
+
+                // Carregar Turma manualmente, se desejar
+                if (createdAluno.TurmaId.HasValue)
+                {
+                    var turmaResponse = await _supabase.From<Turma>().Where(t => t.Id == createdAluno.TurmaId.Value).Get();
+                    var turma = turmaResponse.Models.FirstOrDefault();
+                    return Ok(new
+                    {
+                        createdAluno.Id,
+                        createdAluno.Nome,
+                        createdAluno.TurmaId,
+                        createdAluno.Ativo,
+                        Turma = turma
+                    });
+                }
+
+                return CreatedAtAction(nameof(GetAluno), new { id = createdAluno.Id }, createdAluno);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Erro interno: {ex.Message}" });
+            }
+        }
     }
 }

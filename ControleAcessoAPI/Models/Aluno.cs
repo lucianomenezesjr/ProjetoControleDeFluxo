@@ -1,27 +1,27 @@
+using Supabase.Postgrest.Attributes;
+using Supabase.Postgrest.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace ControleAcessoAPI.Models
 {
-    public class Aluno
+    [Table("aluno")]
+    public class Aluno : BaseModel
     {
+        [PrimaryKey("id")]
         public int Id { get; set; }
 
+        [Column("nome")]
         [Required]
         [StringLength(100)]
         public string Nome { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(100)]
-        [EmailAddress]
-        public string Email { get; set; } = string.Empty;
+        [Column("turma_id")]
+        public int? TurmaId { get; set; } // Chave estrangeira opcional
 
-        [Required]
-        public int TurmaId { get; set; }
-        public Turma Turma { get; set; } = null!;
-
+        [Column("ativo")]
         public bool Ativo { get; set; } = true;
 
-        public ICollection<RequisicaoDeAcesso>? Requisicoes { get; set; }
-        public ICollection<RegistroAcesso>? Registros { get; set; }
+        // Removida a propriedade de navegação Turma para evitar confusão
+        // Se precisar, carregue manualmente no controller
     }
 }

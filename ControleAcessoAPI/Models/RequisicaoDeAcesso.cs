@@ -1,31 +1,37 @@
+using Supabase.Postgrest.Attributes;
+using Supabase.Postgrest.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace ControleAcessoAPI.Models
 {
-    public class RequisicaoDeAcesso
+    [Table("requisicao_de_acesso")]
+    public class RequisicaoDeAcesso : BaseModel
     {
+        [PrimaryKey("id")]
         public int Id { get; set; }
 
+        [Column("aluno_id")]
         [Required]
         public int AlunoId { get; set; }
-        public Aluno Aluno { get; set; } = null!;
 
+        [Column("requisicao_por")]
         [Required]
-        public DateTime DataEntrada { get; set; }
+        public int RequisicaoPor { get; set; }
 
-        public DateTime? DataSaida { get; set; }
-
-        public int? RequisicaoPorId { get; set; }
-        public Usuario? RequisicaoPor { get; set; }
-
+        [Column("status")]
         [Required]
         [StringLength(20)]
-        [RegularExpression("pendente|aprovada|recusada|cancelada", ErrorMessage = "Status inválido.")]
-        public string Status { get; set; } = "pendente";
+        public string Status { get; set; } = string.Empty;
 
+        [Column("motivo")]
         [StringLength(200)]
-        public string? Motivo { get; set; }
+        public string Motivo { get; set; } = string.Empty;
 
-        public DateTime DataSolicitacao { get; set; } = DateTime.UtcNow; // Permitido, mas o banco pode sobrescrever com DEFAULT
+        [Column("data_solicitacao")]
+        [Required]
+        public DateTime DataSolicitacao { get; set; }
+
+        [Column("horario_entrada_ou_saida")]
+        public DateTime? HorarioEntradaOuSaida { get; set; }
     }
 }
