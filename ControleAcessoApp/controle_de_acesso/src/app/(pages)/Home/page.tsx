@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import LoaderSimple from '@/app/components/LoaderSimple';
+import Logo from '@/app/components/Logo';
+import { Button } from '@/components/ui/button';
+
 
 interface User {
   id: number;
@@ -70,21 +74,48 @@ export default function Home() {
     router.push('/Login');
   };
 
-  if (loading) return <div>Carregando...</div>;
+  if (loading) return <div><LoaderSimple /></div>;
   if (error) return <div>{error}</div>;
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-lg shadow-lg text-center">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">Bem-vindo à Home</h1>
-        <p className="text-lg text-gray-600">Olá, {user?.nome}!</p>
-        <p className="text-md text-gray-500">Função: {user?.funcao}</p>
-        <button
-          onClick={handleLogout}
-          className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-        >
-          Sair
-        </button>
+    <div className="min-h-screen flex flex-col md:flex-row">
+
+      {/* Right Section (User Info and Controls) */}
+      <div className="w-full bg-white flex items-center justify-center p-6">
+        <div className="w-full max-w-md space-y-6">
+          <Logo />
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+            <h1 className="text-3xl font-bold text-gray-800 mb-4">Controle de Entrada e Saída</h1>
+            {user && (
+              <>
+                <p className="text-lg text-gray-600">Bem-vindo, {user.nome}!</p>
+                <p className="text-md text-gray-500">Função: {user.funcao}</p>
+                <p className="text-md text-gray-500">Email: {user.email}</p>
+                <p className="text-md text-gray-500">Status: {user.ativo ? 'Ativo' : 'Inativo'}</p>
+              </>
+            )}
+            <div className="mt-6 space-y-4">
+              <Button
+                //onClick={handleRegisterEntry}
+                className="w-full bg-green-600 text-white hover:bg-green-700"
+              >
+                Registrar Entrada
+              </Button>
+              <Button
+                //onClick={handleRegisterExit}
+                className="w-full bg-yellow-600 text-white hover:bg-yellow-700"
+              >
+                Registrar Saída
+              </Button>
+              <Button
+                onClick={handleLogout}
+                className="w-full bg-red-500 text-white hover:bg-red-600"
+              >
+                Sair
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

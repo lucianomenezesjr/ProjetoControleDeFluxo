@@ -9,11 +9,14 @@ import { toast } from "sonner";
 import Image from "next/image";
 import Link from "next/link";
 import Logo from "@/app/components/Logo";
+import LoaderSimple from "@/app/components/LoaderSimple";
 
 export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [redirecting, setRedirecting] = useState(false);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,10 +41,12 @@ export default function Login() {
           toast.error("Erro: Dados do usuário não retornados pelo servidor");
           return;
         }
-        toast.success("Login realizado com sucesso!", { duration: 1500 });
+        toast.success("Login realizado com sucesso!", { duration: 2000 });
+        setRedirecting(true);
+
         setTimeout(() => {
           router.push("/Home");
-        }, 1000);
+        }, 5000);
       } else {
         toast.error(data.message || "Erro ao fazer login", { duration: 3000 });
       }
@@ -53,60 +58,60 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      
-
-      {/* Right Section (Login Form) */}
-      <div className="w-full flex items-center justify-center p-4">
-        <div className="w-full max-w-[500px] space-y-6">
-          <Logo/>
-          <h1 className="font-bold text-3xl text-center m-8">
-            Bem-vindo ao
-            Portal de controle de acesso
-          </h1>
-          <div className="text-center m-8 text-sm">
-            Não tem conta?{" "}
-            <a href="/Cadastro" className="underline underline-offset-4">
-              Cadastre-se
-            </a>
+    <div className="w-full flex items-center justify-center p-4">
+      <div className="w-full max-w-[500px] space-y-6">
+        <Logo />
+        {redirecting ? (
+          <div className="text-center">
+            <p className="text-lg mb-4">Redirecionando para o portal...</p>
+            <LoaderSimple />
           </div>
-          <form onSubmit={handleSubmit}>
-            <div className="flex flex-col gap-6">
-              
-              <div className="grid gap-6">
-                <div className="grid gap-3">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-
-                    id="email"
-                    type="email"
-                    placeholder="exemplo@senai.br"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="grid gap-3">
-                  <div className="flex items-center">
-                    <Label htmlFor="password">Senha</Label>
-                    
-                  </div>
-                  <Input 
-                    id="password" 
-                    type="password"
-                    value={senha}
-                    onChange={(e) => setSenha(e.target.value)}
-                    placeholder="Senha"
-                    required
-                     />
-                </div>
-                <Button type="submit" className="w-full text-white">
-                  Entrar
-                </Button>
-              </div>  
+        ) : (
+          <>
+            <h1 className="font-bold text-3xl text-center m-8">
+              Bem-vindo ao Portal de controle de acesso
+            </h1>
+            <div className="text-center m-8 text-sm">
+              Não tem conta?{" "}
+              <a href="/Cadastro" className="underline underline-offset-4">
+                Cadastre-se
+              </a>
             </div>
-          </form>
-        </div>
+            <form onSubmit={handleSubmit}>
+              <div className="flex flex-col gap-6">
+                <div className="grid gap-6">
+                  <div className="grid gap-3">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="exemplo@senai.br"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-3">
+                    <Label htmlFor="password">Senha</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={senha}
+                      onChange={(e) => setSenha(e.target.value)}
+                      placeholder="Senha"
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full text-white">
+                    Entrar
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </>
+        )}
       </div>
     </div>
+  </div>
   );
 }
