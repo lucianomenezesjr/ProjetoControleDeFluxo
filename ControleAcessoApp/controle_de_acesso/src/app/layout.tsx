@@ -24,7 +24,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
         </ThemeProvider>
-        <Toaster richColors position="bottom-left" />
+        <Toaster richColors position="bottom-left" theme="dark" />
       </body>
     </html>
   );

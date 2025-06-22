@@ -25,7 +25,7 @@ interface User {
   ativo: boolean;
 }
 
-export default function UsuariosPage() {
+export default function TurmaAdicionarPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);

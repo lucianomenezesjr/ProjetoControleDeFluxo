@@ -1,5 +1,6 @@
 "use client"
 
+import { ClipboardIcon } from "@heroicons/react/24/outline";
 import {
   IconDots,
   IconFolder,
@@ -27,6 +28,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { DropdownMenuTurma } from "./DropdownTurma"
+import { DropdownMenuRequisicoes } from "./DropdownRequisicoes"
 
 export function NavDocuments({
   items,
@@ -55,6 +57,14 @@ export function NavDocuments({
                 <div>
                     <IconUsersGroup className="size-5" /> 
                     <DropdownMenuTurma />
+                </div>
+            
+              
+            </SidebarMenuButton>
+            <SidebarMenuButton asChild>
+                <div>
+                    <ClipboardIcon className="h-4 w-4" />
+                    <DropdownMenuRequisicoes />
                 </div>
             
               

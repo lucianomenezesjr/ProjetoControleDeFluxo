@@ -7,7 +7,7 @@ namespace ControleAcessoAPI.Models
     [Table("requisicao_de_acesso")]
     public class RequisicaoDeAcesso : BaseModel  // <- aqui é essencial!
     {
-        [PrimaryKey("id")]
+        [PrimaryKey("id", false)]
         [Column("id")]
         public int Id { get; set; }
 
