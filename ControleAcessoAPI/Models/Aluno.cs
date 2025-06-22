@@ -8,6 +8,7 @@ namespace ControleAcessoAPI.Models
     public class Aluno : BaseModel
     {
         [PrimaryKey("id")]
+        [Column("id")]
         public int Id { get; set; }
 
         [Column("nome")]

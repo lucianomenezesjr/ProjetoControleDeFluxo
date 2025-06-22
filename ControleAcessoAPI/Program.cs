@@ -1,3 +1,5 @@
+using ControleAcessoAPI.Data;
+using Microsoft.EntityFrameworkCore;
 using Supabase;
 using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -50,9 +52,21 @@ builder.Services.AddSingleton(provider =>
         AutoRefreshToken = true
     });
 
-    client.InitializeAsync().Wait();
+    client.InitializeAsync().Wait(); // Warning: Synchronous wait
     return client;
 });
+
+// Configurar AppDbContext with EF Core
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new ArgumentNullException(nameof(connectionString), "A string de conexão não foi configurada no appsettings.json.");
+}
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(connectionString)
+           .LogTo(Console.WriteLine, LogLevel.Information) // Warning: Sensitive data logging
+           .EnableSensitiveDataLogging());
 
 // Configurar autenticação JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -81,7 +95,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("http://localhost:3000") // Next.js dev
               .AllowAnyHeader()
               .AllowAnyMethod();
-        //.AllowCredentials(); // Descomente se usar cookies
+        //.AllowCredentials(); // Warning: Credentials not enabled
     });
 });
 
@@ -96,7 +110,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+app.UseHttpsRedirection(); // Warning: No HTTPS port configured
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
