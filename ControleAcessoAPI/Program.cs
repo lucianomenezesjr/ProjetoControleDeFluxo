@@ -10,6 +10,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Adicionar arquivos de configuração
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
+// Validar configuração
+var configuration = builder.Configuration;
+var supabaseUrl = configuration["Supabase:Url"] ?? throw new ArgumentNullException("Supabase:Url", "Missing in appsettings.json.");
+var supabaseKey = configuration["Supabase:Key"] ?? throw new ArgumentNullException("Supabase:Key", "Missing in appsettings.json.");
+var connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new ArgumentNullException("DefaultConnection", "Missing in appsettings.json.");
+
 // Configurar serviços
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options =>
@@ -26,47 +32,25 @@ builder.Services.AddControllers()
     });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    // Configurações do Swagger
-});
+builder.Services.AddSwaggerGen();
 
 // Configurar Supabase
-var supabaseUrl = builder.Configuration["Supabase:Url"];
-if (string.IsNullOrEmpty(supabaseUrl))
-{
-    throw new ArgumentNullException(nameof(supabaseUrl), "A URL do Supabase não foi configurada no appsettings.json.");
-}
-
-var supabaseKey = builder.Configuration["Supabase:Key"];
-if (string.IsNullOrEmpty(supabaseKey))
-{
-    throw new ArgumentNullException(nameof(supabaseKey), "A chave do Supabase não foi configurada no appsettings.json.");
-}
-
-builder.Services.AddSingleton(provider =>
+builder.Services.AddSingleton<Supabase.Client>(provider =>
 {
     var client = new Supabase.Client(supabaseUrl, supabaseKey, new SupabaseOptions
     {
-        AutoConnectRealtime = true,
+        AutoConnectRealtime = false, // Disable Realtime for now (enable later if needed)
         AutoRefreshToken = true
     });
-
-    client.InitializeAsync().Wait(); // Warning: Synchronous wait
     return client;
 });
+builder.Services.AddHostedService<SupabaseInitializer>();
 
-// Configurar AppDbContext with EF Core
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-if (string.IsNullOrEmpty(connectionString))
-{
-    throw new ArgumentNullException(nameof(connectionString), "A string de conexão não foi configurada no appsettings.json.");
-}
-
+// Configurar AppDbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString)
-           .LogTo(Console.WriteLine, LogLevel.Information) // Warning: Sensitive data logging
-           .EnableSensitiveDataLogging());
+           .LogTo(Console.WriteLine, LogLevel.Information)
+           .EnableSensitiveDataLogging(builder.Environment.IsDevelopment()));
 
 // Configurar autenticação JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -78,30 +62,29 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+            ValidIssuer = configuration["Jwt:Issuer"],
+            ValidAudience = configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(configuration["Jwt:Key"]))
         };
     });
 
-builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
+builder.Services.AddSingleton<IConfiguration>(configuration);
 
-// Configurar CORS antes de Build
+// Configurar CORS
 var corsPolicyName = "AllowNextJS";
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(corsPolicyName, policy =>
     {
-        policy.WithOrigins("http://localhost:3000") // Next.js dev
+        policy.WithOrigins("http://localhost:3000")
               .AllowAnyHeader()
               .AllowAnyMethod();
-        //.AllowCredentials(); // Warning: Credentials not enabled
     });
 });
 
 var app = builder.Build();
 
-// Usar middleware CORS
+// Usar middleware
 app.UseCors(corsPolicyName);
 
 if (app.Environment.IsDevelopment())
@@ -110,9 +93,38 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection(); // Warning: No HTTPS port configured
+app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Hosted service for Supabase initialization
+public class SupabaseInitializer : IHostedService
+{
+    private readonly Supabase.Client _supabaseClient;
+
+    public SupabaseInitializer(Supabase.Client supabaseClient)
+    {
+        _supabaseClient = supabaseClient;
+    }
+
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            Console.WriteLine("Initializing Supabase client...");
+            await _supabaseClient.InitializeAsync();
+            Console.WriteLine("Supabase client initialized successfully.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Supabase initialization failed: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            throw; // Rethrow to fail startup if initialization is critical
+        }
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+}

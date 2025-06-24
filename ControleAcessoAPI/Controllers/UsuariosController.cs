@@ -26,7 +26,7 @@ public class UsuariosController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize]
+    //[Authorize]
     public async Task<ActionResult<IEnumerable<Usuario>>> GetAll()
     {
         try

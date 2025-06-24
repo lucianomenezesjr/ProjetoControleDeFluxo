@@ -1,17 +1,14 @@
-using Supabase.Postgrest.Attributes;
-using Supabase.Postgrest.Models;
-using System.Text.Json.Serialization;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace ControleAcessoAPI.Models
+namespace ControleAcessoAPI.Models.EF
 {
     [Table("requisicao_de_acesso")]
-    public class RequisicaoDeAcesso : BaseModel
+    public class RequisicaoDeAcessoEF
     {
-
-        [PrimaryKey("id", true)]  // ← O segundo parâmetro "true" indica autoincremento
+        [Key]
         [Column("id")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         [Column("aluno_id")]
@@ -36,5 +33,11 @@ namespace ControleAcessoAPI.Models
 
         [Column("horario_entrada_ou_saida")]
         public DateTime? HorarioEntradaOuSaida { get; set; }
+
+        [ForeignKey("AlunoId")]
+        public Aluno? Aluno { get; set; }
+
+        [ForeignKey("RequisicaoPor")]
+        public Usuario? RequisicaoPorNavigation { get; set; }
     }
 }

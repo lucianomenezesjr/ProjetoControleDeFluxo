@@ -1,6 +1,7 @@
 // DTO para criação (POST)
 public class RequisicaoDeAcessoDto
 {
+    
     public int AlunoId { get; set; }
     public int RequisicaoPor { get; set; }
     public string Status { get; set; } = "pendente";

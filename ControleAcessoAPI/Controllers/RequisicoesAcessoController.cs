@@ -5,6 +5,10 @@ using Supabase;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
+using Supabase.Postgrest;
+using Supabase.Postgrest.Attributes;
+using Supabase.Postgrest.Responses;  // For Postgrest response types
+using Supabase.Postgrest.Exceptions;  // Alternative exception namespace
 
 namespace ControleAcessoAPI.Controllers
 {
@@ -74,29 +78,56 @@ namespace ControleAcessoAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<RequisicaoDeAcesso>> Create([FromBody] RequisicaoDeAcessoDto dto)
+public async Task<ActionResult<RequisicaoAcessoResponseDto>> Create([FromBody] RequisicaoDeAcessoDto dto)
+{
+    if (!ModelState.IsValid)
+        return BadRequest(ModelState);
+
+    try
+    {
+        var alunoTask = _supabase.From<Aluno>().Where(a => a.Id == dto.AlunoId).Get();
+        var usuarioTask = _supabase.From<Usuario>().Where(u => u.Id == dto.RequisicaoPor).Get();
+        await Task.WhenAll(alunoTask, usuarioTask);
+
+        if (alunoTask.Result.Models.Count == 0 || usuarioTask.Result.Models.Count == 0)
+            return BadRequest("Aluno ou usuário não encontrado");
+
+        var novaRequisicao = new RequisicaoDeAcesso
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            AlunoId = dto.AlunoId,
+            RequisicaoPor = dto.RequisicaoPor,
+            Status = dto.Status ?? "pendente",
+            Motivo = dto.Motivo ?? string.Empty,
+            DataSolicitacao = dto.DataSolicitacao,
+            HorarioEntradaOuSaida = dto.HorarioEntradaOuSaida
+        };
 
-            var nova = new RequisicaoDeAcesso
-            {
-                AlunoId = dto.AlunoId,
-                RequisicaoPor = dto.RequisicaoPor,
-                Status = dto.Status,
-                Motivo = dto.Motivo,
-                DataSolicitacao = dto.DataSolicitacao,
-                HorarioEntradaOuSaida = dto.HorarioEntradaOuSaida
-            };
+        var response = await _supabase.From<RequisicaoDeAcesso>().Insert(novaRequisicao); // Remove QueryOptions
+        var created = response.Models.First();
 
-            var insert = await _supabase.From<RequisicaoDeAcesso>().Insert(nova);
-            var created = insert.Models.FirstOrDefault();
+        if (created == null)
+            return StatusCode(500, "Falha ao criar requisição");
 
-            if (created == null)
-                return StatusCode(500, new { message = "Erro ao criar requisição" });
+        Console.WriteLine($"Inserted ID: {created.Id}"); // Debug log
 
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-        }
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, new RequisicaoAcessoResponseDto
+        {
+            Id = created.Id,
+            AlunoId = created.AlunoId,
+            AlunoNome = alunoTask.Result.Models.First().Nome,
+            RequisicaoPor = usuarioTask.Result.Models.First().Nome,
+            Status = created.Status,
+            Motivo = created.Motivo,
+            DataSolicitacao = created.DataSolicitacao,
+            HorarioEntradaOuSaida = created.HorarioEntradaOuSaida
+        });
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Exception: {ex.Message}"); // Log exception
+        return StatusCode(500, $"Erro interno: {ex.Message}");
+    }
+}
 
         [HttpPut("{id}/recusar")]
         public async Task<IActionResult> Recusar(int id)

@@ -12,7 +12,7 @@ namespace ControleAcessoAPI.Data
         public DbSet<Usuario> Usuarios => Set<Usuario>();
         public DbSet<Turma> Turmas => Set<Turma>();
         public DbSet<Aluno> Alunos => Set<Aluno>();
-        public DbSet<ControleAcessoAPI.Models.EF.RequisicaoDeAcesso> RequisicoesDeAcesso => Set<ControleAcessoAPI.Models.EF.RequisicaoDeAcesso>();
+        public DbSet<RequisicaoDeAcessoEF> RequisicoesDeAcesso => Set<RequisicaoDeAcessoEF>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -20,11 +20,14 @@ namespace ControleAcessoAPI.Data
             modelBuilder.Entity<Usuario>().HasIndex(u => u.Email).IsUnique();
             modelBuilder.Entity<Aluno>().HasIndex(a => a.Nome).IsUnique();
 
-            modelBuilder.Entity<ControleAcessoAPI.Models.EF.RequisicaoDeAcesso>(entity =>
+            modelBuilder.Entity<RequisicaoDeAcessoEF>(entity =>
             {
                 entity.ToTable("requisicao_de_acesso");
 
-                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .ValueGeneratedOnAdd();
+
                 entity.Property(e => e.AlunoId).HasColumnName("aluno_id");
                 entity.Property(e => e.RequisicaoPor).HasColumnName("requisicao_por");
                 entity.Property(e => e.Status).HasColumnName("status");
@@ -35,12 +38,12 @@ namespace ControleAcessoAPI.Data
                 entity.HasOne(r => r.Aluno)
                     .WithMany()
                     .HasForeignKey(r => r.AlunoId)
-                    .IsRequired(false);
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(r => r.RequisicaoPorNavigation)
                     .WithMany()
                     .HasForeignKey(r => r.RequisicaoPor)
-                    .IsRequired(false);
+                    .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }
