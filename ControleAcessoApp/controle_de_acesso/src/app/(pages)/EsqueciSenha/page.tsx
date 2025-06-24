@@ -69,8 +69,9 @@ export default function Login() {
         ) : (
           <>
             <h1 className="font-bold text-3xl text-center m-8">
-              Bem-vindo ao Portal de controle de acesso
+              Esqueceu a senha? 
             </h1>
+            <h3 className="font-light text-xl text-center mr-16 ml-16">Informe um email e enviaremos um link para recuperação da sua senha.</h3>
             <div className="text-center m-8 text-sm">
               Não tem conta?{" "}
               <a href="/Cadastro" className="underline underline-offset-4">
@@ -98,7 +99,7 @@ export default function Login() {
                         href="/EsqueciSenha"
                         className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                       >
-                        Esqueci a senha?
+                        Forgot your password?
                       </a>
                     </div>
                     
