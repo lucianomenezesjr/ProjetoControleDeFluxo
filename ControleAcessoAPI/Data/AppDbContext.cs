@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ControleAcessoAPI.Models;
 using Supabase.Postgrest; // For ClientOptions, if needed
-using ControleAcessoAPI.Models.EF; // usar a versão correta aqui
+using ControleAcessoAPI.Models; // usar a versão correta aqui
 
 namespace ControleAcessoAPI.Data
 {
@@ -12,39 +12,14 @@ namespace ControleAcessoAPI.Data
         public DbSet<Usuario> Usuarios => Set<Usuario>();
         public DbSet<Turma> Turmas => Set<Turma>();
         public DbSet<Aluno> Alunos => Set<Aluno>();
-        public DbSet<RequisicaoDeAcessoEF> RequisicoesDeAcesso => Set<RequisicaoDeAcessoEF>();
+        public DbSet<RequisicaoDeAcesso> RequisicoesDeAcesso => Set<RequisicaoDeAcesso>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Turma>().HasIndex(t => t.Nome).IsUnique();
             modelBuilder.Entity<Usuario>().HasIndex(u => u.Email).IsUnique();
             modelBuilder.Entity<Aluno>().HasIndex(a => a.Nome).IsUnique();
-
-            modelBuilder.Entity<RequisicaoDeAcessoEF>(entity =>
-            {
-                entity.ToTable("requisicao_de_acesso");
-
-                entity.Property(e => e.Id)
-                    .HasColumnName("id")
-                    .ValueGeneratedOnAdd();
-
-                entity.Property(e => e.AlunoId).HasColumnName("aluno_id");
-                entity.Property(e => e.RequisicaoPor).HasColumnName("requisicao_por");
-                entity.Property(e => e.Status).HasColumnName("status");
-                entity.Property(e => e.Motivo).HasColumnName("motivo");
-                entity.Property(e => e.DataSolicitacao).HasColumnName("data_solicitacao");
-                entity.Property(e => e.HorarioEntradaOuSaida).HasColumnName("horario_entrada_ou_saida");
-
-                entity.HasOne(r => r.Aluno)
-                    .WithMany()
-                    .HasForeignKey(r => r.AlunoId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasOne(r => r.RequisicaoPorNavigation)
-                    .WithMany()
-                    .HasForeignKey(r => r.RequisicaoPor)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
+            modelBuilder.Entity<RequisicaoDeAcesso>().HasIndex(r => r.Id).IsUnique();
         }
     }
 }
