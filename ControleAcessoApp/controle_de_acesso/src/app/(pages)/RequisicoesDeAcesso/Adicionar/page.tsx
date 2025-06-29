@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TimePickerDemo } from "@/components/ui/time-picker-demo";
 
 interface Aluno {
   id: number;
@@ -37,12 +38,12 @@ export default function RequisicoesAdicionarPage() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const router = useRouter();
-  
+
   // Form state
   const [alunoId, setAlunoId] = useState<number | null>(null);
   const [motivo, setMotivo] = useState("");
   const [motivoCustomizado, setMotivoCustomizado] = useState("");
-  const [horarioEntradaOuSaida, setHorarioEntradaOuSaida] = useState("");
+  const [horarioEntradaOuSaida, setHorarioEntradaOuSaida] = useState<Date | undefined>(undefined);
   const [showCustomMotivo, setShowCustomMotivo] = useState(false);
 
   const motivosPadroes = [
@@ -50,14 +51,30 @@ export default function RequisicoesAdicionarPage() {
     "Problemas familiares",
     "Atividade extracurricular",
     "Problemas de transporte",
-    "Outros"
+    "Outros",
   ];
+
+  // Função para formatar a data/hora no fuso horário local (-03:00)
+  const formatLocalDateTime = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!currentUser) {
       toast.error("Usuário não autenticado");
+      return;
+    }
+
+    if (!currentUser.nome) {
+      toast.error("Nome do usuário não encontrado");
       return;
     }
 
@@ -71,33 +88,74 @@ export default function RequisicoesAdicionarPage() {
       return;
     }
 
+    if (motivo === "Outros" && !motivoCustomizado.trim()) {
+      toast.error("Especifique o motivo personalizado");
+      return;
+    }
+
     if (!horarioEntradaOuSaida) {
       toast.error("Informe o horário de entrada/saída");
       return;
     }
 
     const motivoFinal = motivo === "Outros" ? motivoCustomizado : motivo;
-    const dataSolicitacao = new Date().toISOString(); // Data e hora atuais
+    const currentDateSolicitation = new Date();
+    let dataSolicitacao = formatLocalDateTime(currentDateSolicitation);
+
+    // Format horario_entrada_ou_saida no fuso horário local
+    let horario;
+    try {
+      // Combinar a data atual com o horário selecionado
+      const currentDate = new Date();
+      const selectedTime = new Date(horarioEntradaOuSaida);
+      currentDate.setHours(
+        selectedTime.getHours(),
+        selectedTime.getMinutes(),
+      );
+      horario = formatLocalDateTime(currentDate); // Formato YYYY-MM-DD HH:mm:ss
+      if (isNaN(currentDate.getTime())) {
+        throw new Error("Invalid time");
+      }
+    } catch (error) {
+      toast.error("Formato de horário inválido");
+      return;
+    }
+
+    // Encontrar o aluno selecionado com base no alunoId
+    const alunoSelecionado = alunos.find((aluno) => aluno.id === alunoId);
+    if (!alunoSelecionado) {
+      toast.error("Aluno selecionado não encontrado");
+      return;
+    }
+
+    const payload = {
+      alunoNome: alunoSelecionado.nome,
+      requisicaoPor: currentUser.nome,
+      status: "pendente",
+      motivo: motivoFinal,
+      dataSolicitacao,
+      horarioEntradaOuSaida: horario,
+    };
+    console.log("Payload:", payload);
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5274/api/RequisicoesAcesso", {
+      if (!token) {
+        toast.error("Token de autenticação não encontrado");
+        return;
+      }
+
+      const response = await fetch("http://localhost:5274/api/RequisicaoDeAcesso", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify({ 
-          alunoId,
-          requisicaoPor: currentUser.id,
-          status: "pendente",
-          motivo: motivoFinal,
-          dataSolicitacao, // Data preenchida automaticamente
-          horarioEntradaOuSaida: new Date(horarioEntradaOuSaida).toISOString()
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
+      console.log("Response:", data, "Status:", response.status);
 
       if (response.ok) {
         toast.success("Requisição cadastrada com sucesso!", { duration: 2000 });
@@ -105,16 +163,17 @@ export default function RequisicoesAdicionarPage() {
         setAlunoId(null);
         setMotivo("");
         setMotivoCustomizado("");
-        setHorarioEntradaOuSaida("");
+        setHorarioEntradaOuSaida(undefined);
         setShowCustomMotivo(false);
       } else {
-        toast.error(data.message || "Erro ao cadastrar requisição", {
-          duration: 3000,
-        });
+        const errorMessage = data.errors
+          ? Object.values(data.errors).flat().join("; ")
+          : data.message || data.title || "Erro ao cadastrar requisição";
+        toast.error(errorMessage, { duration: 3000 });
       }
     } catch (error) {
       console.error("Erro na conexão com o servidor:", error);
-      toast.error("Erro na conexão com o servidor");
+      toast.error(`Erro na conexão com o servidor: ${error}`);
     }
   };
 
@@ -147,15 +206,17 @@ export default function RequisicoesAdicionarPage() {
     // Fetch alunos
     const fetchAlunos = async () => {
       try {
-        const token = localStorage.getItem("token");
+        if (!storedToken) {
+          throw new Error("Token de autenticação não encontrado");
+        }
         const response = await fetch("http://localhost:5274/api/Alunos", {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${storedToken}`,
+          },
         });
 
         if (!response.ok) {
-          throw new Error("Erro ao buscar alunos");
+          throw new Error(`Erro ao buscar alunos: ${response.statusText}`);
         }
 
         const data = await response.json();
@@ -207,7 +268,7 @@ export default function RequisicoesAdicionarPage() {
                       <Label htmlFor="aluno">Aluno</Label>
                       <Select
                         value={alunoId?.toString() || ""}
-                        onValueChange={(value) => setAlunoId(Number(value))}
+                        onValueChange={(value) => setAlunoId(value ? Number(value) : null)}
                         required
                       >
                         <SelectTrigger id="aluno">
@@ -231,6 +292,9 @@ export default function RequisicoesAdicionarPage() {
                         onValueChange={(value) => {
                           setMotivo(value);
                           setShowCustomMotivo(value === "Outros");
+                          if (value !== "Outros") {
+                            setMotivoCustomizado("");
+                          }
                         }}
                         required
                       >
@@ -264,15 +328,12 @@ export default function RequisicoesAdicionarPage() {
                     {/* Horário */}
                     <div className="grid gap-3">
                       <Label htmlFor="horario">Horário de entrada/saída</Label>
-                      <Input
-                        id="horario"
-                        type="datetime-local"
-                        value={horarioEntradaOuSaida}
-                        onChange={(e) => setHorarioEntradaOuSaida(e.target.value)}
-                        required
+                      <TimePickerDemo
+                        date={horarioEntradaOuSaida}
+                        setDate={setHorarioEntradaOuSaida}
                       />
                     </div>
-                    
+
                     <Button
                       type="submit"
                       className="w-full bg-blue-600 text-white hover:bg-blue-700"
