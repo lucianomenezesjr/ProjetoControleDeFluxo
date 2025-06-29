@@ -11,13 +11,13 @@ import DataTable from "@/app/components/data-table-requisicoes";
 
 interface RequisicaoAcesso {
   id: number;
-  alunoId: number;
-  alunoNome: string;
-  requisicaoPor: string;
+  alunoId: number | null;
+  alunoNome: string | null;
+  requisicaoPor: string | null;
   status: string;
-  motivo: string;
-  dataSolicitacao: string;
-  horarioEntradaOuSaida: string;
+  motivo: string | null;
+  dataSolicitacao: string | null;
+  horarioEntradaOuSaida: string | null;
 }
 
 interface User {
@@ -68,21 +68,29 @@ export default function RequisicoesAcessoPage() {
 
   const fetchRequisicoes = async (token: string) => {
     try {
-      const response = await fetch("http://localhost:5274/api/RequisicoesAcesso", {
+      const response = await fetch("http://localhost:5274/api/RequisicaoDeAcesso", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error("Não autorizado ou erro ao buscar requisições de acesso");
+        const errorData = await response.json();
+        throw new Error(errorData.message || errorData.title || `Erro ao buscar requisições: ${response.statusText}`);
       }
 
       const data = await response.json();
-      setRequisicoes(Array.isArray(data) ? data : []);
+      console.log("Fetched requisicoes:", data); // Debug
+      // Ensure nomeAluno is set to 'Desconhecido' if missing
+      const normalizedData = Array.isArray(data) ? data.map(item => ({
+        ...item,
+        alunoNome: item.alunoNome || "Desconhecido",
+      })) : [];
+      setRequisicoes(normalizedData);
     } catch (err) {
       console.error("Erro ao buscar lista de requisições:", err);
-      setError("Erro ao carregar a lista de requisições de acesso");
+      toast.error(error || "Erro ao carregar a lista de requisições de acesso", { duration: 5000 });
+      setError(error || "Erro ao carregar a lista de requisições de acesso");
       setTimeout(() => {
         router.push("/Login");
       }, 5000);
@@ -94,33 +102,34 @@ export default function RequisicoesAcessoPage() {
   const handleUpdateStatus = async (requisicaoId: number, novoStatus: string) => {
     const token = localStorage.getItem("token");
     if (!token) {
-      toast.error("Usuário não autenticado");
+      toast.error("Token de autenticação não encontrado");
       return;
     }
 
     try {
-      const response = await fetch(`http://localhost:5274/api/RequisicoesAcesso/${requisicaoId}/status`, {
+      const response = await fetch(`http://localhost:5274/api/RequisicaoDeAcesso/${requisicaoId}/status`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          status: novoStatus
+          status: novoStatus.toLowerCase(),
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Erro ao atualizar status da requisição");
+        const errorData = await response.json();
+        throw new Error(errorData.message || errorData.title || "Erro ao atualizar status da requisição");
       }
 
       setRequisicoes(requisicoes.map(req => 
-        req.id === requisicaoId ? { ...req, status: novoStatus } : req
+        req.id === requisicaoId ? { ...req, status: novoStatus.toLowerCase() } : req
       ));
-      toast.success("Status da requisição atualizado com sucesso");
+      toast.success("Status da requisição atualizado com sucesso", { duration: 2000 });
     } catch (err) {
       console.error("Erro ao atualizar status:", err);
-      toast.error("Erro ao atualizar status da requisição");
+      toast.error(error || "Erro ao atualizar status da requisição", { duration: 3000 });
     }
   };
 

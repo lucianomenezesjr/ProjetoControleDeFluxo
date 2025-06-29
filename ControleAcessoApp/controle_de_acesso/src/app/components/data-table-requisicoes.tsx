@@ -100,13 +100,13 @@ import { Tabs } from "@/components/ui/tabs";
 
 export const schema = z.object({
   id: z.number(),
-  alunoId: z.number(),
-  alunoNome: z.string(),
-  requisicaoPor: z.string(),
+  alunoId: z.number().nullable(),
+  alunoNome: z.string().nullable(),
+  requisicaoPor: z.string().nullable(),
   status: z.string(),
-  motivo: z.string(),
-  dataSolicitacao: z.string(),
-  horarioEntradaOuSaida: z.string(),
+  motivo: z.string().nullable(),
+  dataSolicitacao: z.string().nullable(),
+  horarioEntradaOuSaida: z.string().nullable(),
 });
 type RequisicaoAcesso = z.infer<typeof schema>;
 
@@ -171,6 +171,7 @@ const columns: ColumnDef<RequisicaoAcesso>[] = [
   {
     accessorKey: "requisicaoPor",
     header: "Solicitado Por",
+    cell: ({ row }) => row.original.requisicaoPor || "Desconhecido",
   },
   {
     accessorKey: "status",
@@ -179,9 +180,9 @@ const columns: ColumnDef<RequisicaoAcesso>[] = [
       <Badge
         variant="outline"
         className={`px-1.5 ${
-          row.original.status === "aprovada" 
+          row.original.status.toLowerCase() === "aprovada" 
             ? "bg-green-500 text-white border-green-500"
-            : row.original.status === "pendente"
+            : row.original.status.toLowerCase() === "pendente"
             ? "bg-yellow-500 text-white border-yellow-500"
             : "bg-red-500 text-white border-red-500"
         }`}
@@ -193,12 +194,25 @@ const columns: ColumnDef<RequisicaoAcesso>[] = [
   {
     accessorKey: "dataSolicitacao",
     header: "Data Solicitação",
-    cell: ({ row }) => new Date(row.original.dataSolicitacao).toLocaleString(),
+    cell: ({ row }) => 
+      row.original.dataSolicitacao && row.original.dataSolicitacao !== "0001-01-01T00:00:00" 
+        ? new Date(row.original.dataSolicitacao).toLocaleString("pt-BR", { 
+            timeZone: "America/Sao_Paulo",
+            dateStyle: "short",
+            timeStyle: "short"
+          }) 
+        : "-",
   },
   {
     accessorKey: "horarioEntradaOuSaida",
     header: "Horário",
-    cell: ({ row }) => new Date(row.original.horarioEntradaOuSaida).toLocaleTimeString(),
+    cell: ({ row }) => 
+      row.original.horarioEntradaOuSaida && row.original.horarioEntradaOuSaida !== "0001-01-01T00:00:00" 
+        ? new Date(row.original.horarioEntradaOuSaida).toLocaleTimeString("pt-BR", { 
+            timeZone: "America/Sao_Paulo",
+            timeStyle: "short"
+          }) 
+        : "-",
   },
   {
     id: "actions",
@@ -236,7 +250,7 @@ const columns: ColumnDef<RequisicaoAcesso>[] = [
               <DialogHeader>
                 <DialogTitle>Alterar Status da Requisição</DialogTitle>
                 <DialogDescription>
-                  Atualize o status da requisição do aluno {requisicao.alunoNome}
+                  Atualize o status da requisição do aluno {requisicao.alunoNome || "Desconhecido"}
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
@@ -389,7 +403,8 @@ export default function DataTable({ data, onUpdateStatus }: DataTableProps) {
       const oldIndex = dataIds.indexOf(active.id);
       const newIndex = dataIds.indexOf(over.id);
       const newData = arrayMove(data, oldIndex, newIndex);
-      // Note: The state is not updated here; consider updating if needed
+      // Note: Update state if backend supports reordering
+      // setData(newData);
     }
   }
 
@@ -439,7 +454,6 @@ export default function DataTable({ data, onUpdateStatus }: DataTableProps) {
           </DropdownMenu>
         </div>
       </div>
-      {/* Search Bar */}
       <div className="px-4 lg:px-6 mb-4">
         <Input
           type="text"
@@ -581,38 +595,59 @@ function TableCellViewer({ item }: { item: RequisicaoAcesso }) {
     <Drawer direction={isMobile ? "bottom" : "right"}>
       <DrawerTrigger asChild>
         <Button variant="link" className="text-foreground w-fit px-0 text-left">
-          {item.alunoNome}
+          {item.alunoNome || "Desconhecido"}
         </Button>
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader className="gap-1">
-          <DrawerTitle>{item.alunoNome}</DrawerTitle>
+          <DrawerTitle>{item.alunoNome || "Desconhecido"}</DrawerTitle>
           <DrawerDescription>Detalhes da requisição</DrawerDescription>
         </DrawerHeader>
         <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
           <div className="grid gap-3">
             <Label>Aluno</Label>
-            <Input defaultValue={item.alunoNome} disabled />
+            <Input defaultValue={item.alunoNome || "-"} disabled />
           </div>
           <div className="grid gap-3">
             <Label>Solicitado por</Label>
-            <Input defaultValue={item.requisicaoPor} disabled />
+            <Input defaultValue={item.requisicaoPor || "-"} disabled />
           </div>
           <div className="grid gap-3">
             <Label>Status</Label>
-            <Input defaultValue={item.status} disabled />
+            <Input defaultValue={item.status.charAt(0).toUpperCase() + item.status.slice(1)} disabled />
           </div>
           <div className="grid gap-3">
             <Label>Motivo</Label>
-            <Input defaultValue={item.motivo} disabled />
+            <Input defaultValue={item.motivo || "-"} disabled />
           </div>
           <div className="grid gap-3">
             <Label>Data da Solicitação</Label>
-            <Input defaultValue={new Date(item.dataSolicitacao).toLocaleString()} disabled />
+            <Input 
+              defaultValue={
+                item.dataSolicitacao && item.dataSolicitacao !== "0001-01-01T00:00:00" 
+                  ? new Date(item.dataSolicitacao).toLocaleString("pt-BR", { 
+                      timeZone: "America/Sao_Paulo",
+                      dateStyle: "short",
+                      timeStyle: "short"
+                    }) 
+                  : "-"
+              } 
+              disabled 
+            />
           </div>
           <div className="grid gap-3">
             <Label>Horário de Entrada/Saída</Label>
-            <Input defaultValue={new Date(item.horarioEntradaOuSaida).toLocaleTimeString()} disabled />
+            <Input 
+              defaultValue={
+                item.horarioEntradaOuSaida && item.horarioEntradaOuSaida !== "0001-01-01T00:00:00" 
+                  ? new Date(item.horarioEntradaOuSaida).toLocaleTimeString("pt-BR", { 
+                      timeZone: "America/Sao_Paulo",
+                      timeStyle: "short"
+                    }) 
+                  : "-"
+              } 
+              disabled 
+            />
           </div>
         </div>
         <DrawerFooter>
