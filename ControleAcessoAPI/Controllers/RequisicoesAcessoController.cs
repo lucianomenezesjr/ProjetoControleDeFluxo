@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 using Supabase;
 using ControleAcessoAPI.Models;
 using Supabase.Postgrest.Exceptions;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
 
-
-namespace SuaAplicacao.Controllers
+namespace ControleAcessoAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -80,16 +82,21 @@ namespace SuaAplicacao.Controllers
             try
             {
                 var response = await _supabaseClient
-                    .From<RequisicaoDeAcesso>()
-                    .Where(x => x.Id == id)
-                    .Single();
+                    .Rpc("get_requisicao_de_acesso_by_id", new Dictionary<string, object> { { "p_id", id } });
 
-                if (response == null)
+                if (response.Content == null)
                 {
                     return NotFound($"Requisição de acesso com ID {id} não encontrada.");
                 }
 
-                return Ok(response);
+                var requisicoes = JsonConvert.DeserializeObject<List<RequisicaoDeAcessoResponse>>(response.Content);
+
+                if (requisicoes == null || requisicoes.Count == 0)
+                {
+                    return NotFound($"Requisição de acesso com ID {id} não encontrada.");
+                }
+
+                return Ok(requisicoes[0]);
             }
             catch (PostgrestException ex)
             {
