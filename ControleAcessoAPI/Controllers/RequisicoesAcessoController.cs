@@ -1,160 +1,185 @@
-using ControleAcessoAPI.Models;
-using ControleAcessoAPI.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Supabase;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Linq;
-using Supabase.Postgrest;
-using Supabase.Postgrest.Attributes;
-using Supabase.Postgrest.Responses;  // For Postgrest response types
-using Supabase.Postgrest.Exceptions;  // Alternative exception namespace
+using ControleAcessoAPI.Models;
+using Supabase.Postgrest.Exceptions;
 
-namespace ControleAcessoAPI.Controllers
+
+namespace SuaAplicacao.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class RequisicoesAcessoController : ControllerBase
+    public class RequisicaoDeAcessoController : ControllerBase
     {
-        private readonly Supabase.Client _supabase;
+        private readonly Client _supabaseClient;
 
-        public RequisicoesAcessoController(Supabase.Client supabase)
+        public RequisicaoDeAcessoController(Client supabaseClient)
         {
-            _supabase = supabase ?? throw new ArgumentNullException(nameof(supabase));
+            _supabaseClient = supabaseClient;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<RequisicaoAcessoResponseDto>>> GetRequisicoes()
+        [HttpPost]
+        public async Task<IActionResult> Create(RequisicaoDeAcesso requisicao)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
-                var requisicoes = await _supabase.From<RequisicaoDeAcesso>().Get();
-                var alunos = await _supabase.From<Aluno>().Get();
-                var usuarios = await _supabase.From<Usuario>().Get();
+                var response = await _supabaseClient
+                    .From<RequisicaoDeAcesso>()
+                    .Insert(requisicao);
 
-                var result = requisicoes.Models.Select(r => new RequisicaoAcessoResponseDto
+                if (response.Models == null || response.Models.Count == 0)
                 {
-                    Id = r.Id,
-                    AlunoId = r.AlunoId,
-                    AlunoNome = alunos.Models.FirstOrDefault(a => a.Id == r.AlunoId)?.Nome ?? "Desconhecido",
-                    RequisicaoPor = usuarios.Models.FirstOrDefault(u => u.Id == r.RequisicaoPor)?.Nome ?? "Desconhecido",
-                    Status = r.Status,
-                    Motivo = r.Motivo,
-                    DataSolicitacao = r.DataSolicitacao,
-                    HorarioEntradaOuSaida = r.HorarioEntradaOuSaida
-                }).ToList();
+                    return BadRequest("Erro ao criar a requisição de acesso.");
+                }
 
-                return Ok(result);
+                return CreatedAtAction(nameof(Create), new { id = response.Models[0].Id }, response.Models[0]);
+            }
+            catch (PostgrestException ex)
+            {
+                return StatusCode(400, $"Erro no Supabase: {ex.Message}");
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = $"Erro interno: {ex.Message}" });
+                return StatusCode(500, $"Erro interno: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            try
+            {
+                var response = await _supabaseClient
+                    .From<RequisicaoDeAcesso>()
+                    .Get();
+
+                if (response.Models == null)
+                {
+                    return NotFound("Nenhuma requisição de acesso encontrada.");
+                }
+
+                return Ok(response.Models);
+            }
+            catch (PostgrestException ex)
+            {
+                return StatusCode(400, $"Erro no Supabase: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erro interno: {ex.Message}");
             }
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<RequisicaoAcessoResponseDto>> GetById(int id)
+        public async Task<IActionResult> GetById(int id)
         {
-            var response = await _supabase.From<RequisicaoDeAcesso>().Where(r => r.Id == id).Get();
-            var requisicao = response.Models.FirstOrDefault();
-
-            if (requisicao == null)
-                return NotFound();
-
-            var aluno = (await _supabase.From<Aluno>().Where(a => a.Id == requisicao.AlunoId).Get()).Models.FirstOrDefault();
-            var usuario = (await _supabase.From<Usuario>().Where(u => u.Id == requisicao.RequisicaoPor).Get()).Models.FirstOrDefault();
-
-            return Ok(new RequisicaoAcessoResponseDto
+            try
             {
-                Id = requisicao.Id,
-                AlunoId = requisicao.AlunoId,
-                AlunoNome = aluno?.Nome ?? "Desconhecido",
-                RequisicaoPor = usuario?.Nome ?? "Desconhecido",
-                Status = requisicao.Status,
-                Motivo = requisicao.Motivo,
-                DataSolicitacao = requisicao.DataSolicitacao,
-                HorarioEntradaOuSaida = requisicao.HorarioEntradaOuSaida
-            });
+                var response = await _supabaseClient
+                    .From<RequisicaoDeAcesso>()
+                    .Where(x => x.Id == id)
+                    .Single();
+
+                if (response == null)
+                {
+                    return NotFound($"Requisição de acesso com ID {id} não encontrada.");
+                }
+
+                return Ok(response);
+            }
+            catch (PostgrestException ex)
+            {
+                return StatusCode(400, $"Erro no Supabase: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erro interno: {ex.Message}");
+            }
         }
 
-        [HttpPost]
-public async Task<ActionResult<RequisicaoAcessoResponseDto>> Create([FromBody] RequisicaoDeAcessoDto dto)
-{
-    if (!ModelState.IsValid)
-        return BadRequest(ModelState);
-
-    try
-    {
-        var alunoTask = _supabase.From<Aluno>().Where(a => a.Id == dto.AlunoId).Get();
-        var usuarioTask = _supabase.From<Usuario>().Where(u => u.Id == dto.RequisicaoPor).Get();
-        await Task.WhenAll(alunoTask, usuarioTask);
-
-        if (alunoTask.Result.Models.Count == 0 || usuarioTask.Result.Models.Count == 0)
-            return BadRequest("Aluno ou usuário não encontrado");
-
-        var novaRequisicao = new RequisicaoDeAcesso
+        [HttpPut("{id}/status")]
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusRequest request)
         {
-            AlunoId = dto.AlunoId,
-            RequisicaoPor = dto.RequisicaoPor,
-            Status = dto.Status ?? "pendente",
-            Motivo = dto.Motivo ?? string.Empty,
-            DataSolicitacao = dto.DataSolicitacao,
-            HorarioEntradaOuSaida = dto.HorarioEntradaOuSaida
-        };
+            if (!ModelState.IsValid || string.IsNullOrWhiteSpace(request.Status))
+            {
+                return BadRequest("O status é obrigatório e não pode ser vazio.");
+            }
 
-        var response = await _supabase.From<RequisicaoDeAcesso>().Insert(novaRequisicao); // Remove QueryOptions
-        var created = response.Models.First();
+            try
+            {
+                var existingRequisicao = await _supabaseClient
+                    .From<RequisicaoDeAcesso>()
+                    .Where(x => x.Id == id)
+                    .Single();
 
-        if (created == null)
-            return StatusCode(500, "Falha ao criar requisição");
+                if (existingRequisicao == null)
+                {
+                    return NotFound($"Requisição de acesso com ID {id} não encontrada.");
+                }
 
-        Console.WriteLine($"Inserted ID: {created.Id}"); // Debug log
+                existingRequisicao.Status = request.Status;
 
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, new RequisicaoAcessoResponseDto
+                var response = await _supabaseClient
+                    .From<RequisicaoDeAcesso>()
+                    .Where(x => x.Id == id)
+                    .Update(existingRequisicao);
+
+                if (response.Models == null || response.Models.Count == 0)
+                {
+                    return BadRequest("Erro ao atualizar o status da requisição.");
+                }
+
+                return Ok(response.Models[0]);
+            }
+            catch (PostgrestException ex)
+            {
+                return StatusCode(400, $"Erro no Supabase: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erro interno: {ex.Message}");
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
         {
-            Id = created.Id,
-            AlunoId = created.AlunoId,
-            AlunoNome = alunoTask.Result.Models.First().Nome,
-            RequisicaoPor = usuarioTask.Result.Models.First().Nome,
-            Status = created.Status,
-            Motivo = created.Motivo,
-            DataSolicitacao = created.DataSolicitacao,
-            HorarioEntradaOuSaida = created.HorarioEntradaOuSaida
-        });
+            try
+            {
+                var existingRequisicao = await _supabaseClient
+                    .From<RequisicaoDeAcesso>()
+                    .Where(x => x.Id == id)
+                    .Single();
+
+                if (existingRequisicao == null)
+                {
+                    return NotFound($"Requisição de acesso com ID {id} não encontrada.");
+                }
+
+                await _supabaseClient
+                    .From<RequisicaoDeAcesso>()
+                    .Where(x => x.Id == id)
+                    .Delete();
+
+                return NoContent();
+            }
+            catch (PostgrestException ex)
+            {
+                return StatusCode(400, $"Erro no Supabase: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erro interno: {ex.Message}");
+            }
+        }
     }
-    catch (Exception ex)
+
+    public class UpdateStatusRequest
     {
-        Console.WriteLine($"Exception: {ex.Message}"); // Log exception
-        return StatusCode(500, $"Erro interno: {ex.Message}");
-    }
-}
-
-        [HttpPut("{id}/recusar")]
-        public async Task<IActionResult> Recusar(int id)
-        {
-            var result = await _supabase.From<RequisicaoDeAcesso>().Where(r => r.Id == id).Get();
-            var requisicao = result.Models.FirstOrDefault();
-
-            if (requisicao == null) return NotFound();
-
-            requisicao.Status = "recusada";
-            await _supabase.From<RequisicaoDeAcesso>().Where(r => r.Id == id).Update(requisicao);
-
-            return NoContent();
-        }
-
-        [HttpPut("{id}/cancelar")]
-        public async Task<IActionResult> Cancelar(int id)
-        {
-            var result = await _supabase.From<RequisicaoDeAcesso>().Where(r => r.Id == id).Get();
-            var requisicao = result.Models.FirstOrDefault();
-
-            if (requisicao == null) return NotFound();
-
-            requisicao.Status = "cancelada";
-            await _supabase.From<RequisicaoDeAcesso>().Where(r => r.Id == id).Update(requisicao);
-
-            return NoContent();
-        }
+        public string Status { get; set; }
     }
 }
