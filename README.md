@@ -150,4 +150,4 @@ Contribuições são bem-vindas! Para contribuir:
 Este projeto está licenciado sob a Licença MIT. Veja o arquivo [LICENSE](LICENSE) para detalhes.
 
 ## Contato
-Para dúvidas ou suporte, entre em contato com o mantenedor do projeto em [seu-email@exemplo.com](mailto:seu-email@exemplo.com) ou abra uma issue no GitHub.
+Para dúvidas ou suporte, entre em contato com o mantenedor do projeto em [seu-email@exemplo.com](mailto:luciano.menezes.jr11@gmail.com) ou abra uma issue no GitHub.
