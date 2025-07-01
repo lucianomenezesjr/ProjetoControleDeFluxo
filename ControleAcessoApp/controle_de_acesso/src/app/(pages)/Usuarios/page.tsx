@@ -58,7 +58,7 @@ export default function UsuariosPage() {
 
   const fetchUsers = async (token: string) => {
     try {
-      const response = await fetch("http://localhost:5274/api/Usuarios", {
+      const response = await fetch("https://10.109.3.116:7292/api/Usuarios", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -90,7 +90,7 @@ export default function UsuariosPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5274/api/Usuarios/${userId}`, {
+      const response = await fetch(`https://10.109.3.116:7292/api/Usuarios/${userId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -138,7 +138,7 @@ export default function UsuariosPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5274/api/Usuarios/${updatedUser.id}`, {
+      const response = await fetch(`https://10.109.3.116:7292/api/Usuarios/${updatedUser.id}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,

@@ -76,7 +76,14 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(corsPolicyName, policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
+        policy.AllowAnyOrigin()
+
+        //WithOrigins("http://localhost:3000",
+        //                "http://10.109.3.116:3000",
+        //                "http://100.76.55.103:3000",
+        //                "http://100.84.21.43:3000",
+        //                "http://jr-notebook:3000"
+        //)
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -86,6 +93,7 @@ var app = builder.Build();
 
 // Usar middleware
 app.UseCors(corsPolicyName);
+
 
 if (app.Environment.IsDevelopment())
 {

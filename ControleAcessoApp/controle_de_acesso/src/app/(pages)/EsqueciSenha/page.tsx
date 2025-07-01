@@ -22,7 +22,7 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:5274/api/Usuarios/login", {
+      const response = await fetch("https://10.109.3.116:7292/api/Usuarios/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password: senha }),

@@ -64,7 +64,7 @@ export default function UsuariosPage() {
 
   const fetchTurmas = async (token: string) => {
     try {
-      const response = await fetch("http://localhost:5274/api/Turma", {
+      const response = await fetch("https://10.109.3.116:7292/api/Turma", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -95,7 +95,7 @@ export default function UsuariosPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5274/api/Turma/${turmaId}`, {
+      const response = await fetch(`https://10.109.3.116:7292/api/Turma/${turmaId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -130,7 +130,7 @@ export default function UsuariosPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5274/api/Turma/${updatedTurma.id}`, {
+      const response = await fetch(`https://10.109.3.116:7292/api/Turma/${updatedTurma.id}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,

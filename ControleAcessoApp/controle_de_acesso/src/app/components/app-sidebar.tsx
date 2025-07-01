@@ -176,7 +176,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
               asChild
               className=""
             >
-              <a href="#">
+              <a href="/Home">
                 <Image
                     src="/senai_logo.png"
                     alt="Logo da empresa"
