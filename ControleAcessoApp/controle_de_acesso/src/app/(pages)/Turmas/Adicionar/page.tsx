@@ -37,7 +37,7 @@ export default function TurmaAdicionarPage() {
     e.preventDefault();
 
     try {
-      const response = await fetch("https://10.109.3.116:7292/api/Turma", {
+      const response = await fetch("http://jr-notebook:7292/api/Turma", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nome, ativo }),

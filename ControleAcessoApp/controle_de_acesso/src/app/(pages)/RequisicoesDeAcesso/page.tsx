@@ -68,7 +68,7 @@ export default function RequisicoesAcessoPage() {
 
   const fetchRequisicoes = async (token: string) => {
     try {
-      const response = await fetch("https://10.109.3.116:7292/api/RequisicaoDeAcesso", {
+      const response = await fetch("http://jr-notebook:7292/api/RequisicaoDeAcesso", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -107,7 +107,7 @@ export default function RequisicoesAcessoPage() {
     }
 
     try {
-      const response = await fetch(`https://10.109.3.116:7292/api/RequisicaoDeAcesso/${requisicaoId}/status`, {
+      const response = await fetch(`http://jr-notebook:7292/api/RequisicaoDeAcesso/${requisicaoId}/status`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
