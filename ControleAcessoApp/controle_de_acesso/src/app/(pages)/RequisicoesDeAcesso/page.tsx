@@ -68,7 +68,7 @@ export default function RequisicoesAcessoPage() {
 
   const fetchRequisicoes = async (token: string) => {
     try {
-      const response = await fetch("http://localhost:5274/api/RequisicoesAcesso", {
+      const response = await fetch("http://localhost:7292/api/RequisicoesAcesso", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -99,7 +99,7 @@ export default function RequisicoesAcessoPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5274/api/RequisicoesAcesso/${requisicaoId}/status`, {
+      const response = await fetch(`http://localhost:7292/api/RequisicoesAcesso/${requisicaoId}/status`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,

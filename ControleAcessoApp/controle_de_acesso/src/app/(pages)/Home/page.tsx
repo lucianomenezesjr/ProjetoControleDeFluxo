@@ -57,7 +57,7 @@ export default function Home() {
 
   const fetchUsers = async (token: string) => {
     try {
-      const response = await fetch("http://localhost:5274/api/Usuarios", {
+      const response = await fetch("http://localhost:7292/api/Usuarios", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -89,7 +89,7 @@ export default function Home() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5274/api/Usuarios/${userId}`, {
+      const response = await fetch(`http://localhost:7292/api/Usuarios/${userId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -137,7 +137,7 @@ export default function Home() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5274/api/Usuarios/${updatedUser.id}`, {
+      const response = await fetch(`http://localhost:7292/api/Usuarios/${updatedUser.id}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
