@@ -78,25 +78,37 @@ export default function Home() {
   const [timeRange, setTimeRange] = useState("90d");
   const router = useRouter();
 
-  // Process requests into chart data
   const chartData = React.useMemo(() => {
-    const dataByDate: { [key: string]: { date: string; pendente: number; aprovada: number; rejeitada: number } } = {};
+    const dataByDate: { 
+      [key: string]: { 
+        date: string; 
+        pendente: number; 
+        aprovada: number; 
+        rejeitada: number 
+      } 
+    } = {};
 
     requests.forEach((request) => {
       const date = new Date(request.dataSolicitacao).toISOString().split("T")[0];
       if (!dataByDate[date]) {
         dataByDate[date] = { date, pendente: 0, aprovada: 0, rejeitada: 0 };
       }
-      if (request.status.toLowerCase() === "pendente") {
+      
+      // Verifica se contém a palavra (case insensitive)
+      const status = request.status.toLowerCase();
+      
+      if (status.includes("pendente")) {
         dataByDate[date].pendente += 1;
-      } else if (request.status.toLowerCase() === "aprovada") {
+      } else if (status.includes("aprovada")) {
         dataByDate[date].aprovada += 1;
-      } else if (request.status.toLowerCase() === "rejeitada") {
+      } else if (status.includes("rejeitada")) {
         dataByDate[date].rejeitada += 1;
       }
     });
 
-    return Object.values(dataByDate).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    return Object.values(dataByDate).sort((a, b) => 
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
   }, [requests]);
 
   const filteredData = chartData.filter((item) => {
@@ -333,7 +345,7 @@ export default function Home() {
                 <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
                   <ChartContainer
                     config={chartConfig}
-                    className="aspect-auto h-[250px] w-full"
+                    className="aspect-auto h-[450px] w-full"
                   >
                     <AreaChart data={filteredData}>
                       <defs>
