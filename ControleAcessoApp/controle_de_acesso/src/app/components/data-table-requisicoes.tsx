@@ -174,23 +174,27 @@ const columns: ColumnDef<RequisicaoAcesso>[] = [
     cell: ({ row }) => row.original.requisicaoPor || "Desconhecido",
   },
   {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => (
+  accessorKey: "status",
+  header: "Status",
+  cell: ({ row }) => {
+    const status = row.original.status.toLowerCase();
+    
+    return (
       <Badge
         variant="outline"
         className={`px-1.5 ${
-          row.original.status.toLowerCase() === "aprovada" 
+          status.includes("aprovad") // Verifica se contém "aprovado/a"
             ? "bg-green-500 text-white border-green-500"
-            : row.original.status.toLowerCase() === "pendente"
+            : status.includes("pendente")
             ? "bg-yellow-500 text-white border-yellow-500"
-            : "bg-red-500 text-white border-red-500"
+            : "bg-red-500 text-white border-red-500" // Rejeitada/Cancelada
         }`}
       >
-        {row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1)}
+        {row.original.status}
       </Badge>
-    ),
+    );
   },
+},
   {
     accessorKey: "dataSolicitacao",
     header: "Data Solicitação",
@@ -614,7 +618,7 @@ function TableCellViewer({ item }: { item: RequisicaoAcesso }) {
           </div>
           <div className="grid gap-3">
             <Label>Status</Label>
-            <Input defaultValue={item.status.charAt(0).toUpperCase() + item.status.slice(1)} disabled />
+            <Input defaultValue={item.status} disabled />
           </div>
           <div className="grid gap-3">
             <Label>Motivo</Label>

@@ -111,44 +111,19 @@ namespace ControleAcessoAPI.Controllers
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusRequest request)
         {
-            if (!ModelState.IsValid || string.IsNullOrWhiteSpace(request.Status))
-            {
-                return BadRequest("O status é obrigatório e não pode ser vazio.");
-            }
-
             try
             {
-                var existingRequisicao = await _supabaseClient
-                    .From<RequisicaoDeAcesso>()
-                    .Where(x => x.Id == id)
-                    .Single();
-
-                if (existingRequisicao == null)
-                {
-                    return NotFound($"Requisição de acesso com ID {id} não encontrada.");
-                }
-
-                existingRequisicao.Status = request.Status;
-
                 var response = await _supabaseClient
                     .From<RequisicaoDeAcesso>()
                     .Where(x => x.Id == id)
-                    .Update(existingRequisicao);
+                    .Set(x => x.Status, request.Status)
+                    .Update();
 
-                if (response.Models == null || response.Models.Count == 0)
-                {
-                    return BadRequest("Erro ao atualizar o status da requisição.");
-                }
-
-                return Ok(response.Models[0]);
+                return Ok(response.Models?.FirstOrDefault());
             }
             catch (PostgrestException ex)
             {
-                return StatusCode(400, $"Erro no Supabase: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Erro interno: {ex.Message}");
+                return BadRequest($"Erro no Supabase: {ex.Message}");
             }
         }
 

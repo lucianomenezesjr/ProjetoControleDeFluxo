@@ -22,7 +22,7 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://jr-notebook:7292/api/Usuarios/login", {
+      const response = await fetch("http://127.0.0.1:7292/api/Usuarios/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password: senha }),

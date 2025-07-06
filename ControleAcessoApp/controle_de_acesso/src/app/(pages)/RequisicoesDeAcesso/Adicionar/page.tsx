@@ -145,7 +145,7 @@ export default function RequisicoesAdicionarPage() {
         return;
       }
 
-      const response = await fetch("http://jr-notebook:7292/api/RequisicaoDeAcesso", {
+      const response = await fetch("http://127.0.0.1:7292/api/RequisicaoDeAcesso", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -209,7 +209,7 @@ export default function RequisicoesAdicionarPage() {
         if (!storedToken) {
           throw new Error("Token de autenticação não encontrado");
         }
-        const response = await fetch("http://jr-notebook:7292/api/Alunos", {
+        const response = await fetch("http://127.0.0.1:7292/api/Alunos", {
           headers: {
             Authorization: `Bearer ${storedToken}`,
           },

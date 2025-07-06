@@ -68,7 +68,7 @@ export default function RequisicoesAcessoPage() {
 
   const fetchRequisicoes = async (token: string) => {
     try {
-      const response = await fetch("http://jr-notebook:7292/api/RequisicaoDeAcesso", {
+      const response = await fetch("http://127.0.0.1:7292/api/RequisicaoDeAcesso", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -99,39 +99,40 @@ export default function RequisicoesAcessoPage() {
     }
   };
 
-  const handleUpdateStatus = async (requisicaoId: number, novoStatus: string) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      toast.error("Token de autenticação não encontrado");
-      return;
+const handleUpdateStatus = async (requisicaoId: number, novoStatus: string) => {
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || '{}');
+  
+  if (!token) return toast.error("Token não encontrado");
+
+  try {
+    const statusFormatado = `${novoStatus.toLowerCase()} por ${user.nome}`;
+    
+    const response = await fetch(`http://127.0.0.1:7292/api/RequisicaoDeAcesso/${requisicaoId}/status`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status: statusFormatado })
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(error || "Erro na requisição");
     }
 
-    try {
-      const response = await fetch(`http://jr-notebook:7292/api/RequisicaoDeAcesso/${requisicaoId}/status`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          status: novoStatus.toLowerCase(),
-        }),
-      });
+    // Atualiza o estado local
+    setRequisicoes(prev => prev.map(req => 
+      req.id === requisicaoId ? { ...req, status: statusFormatado } : req
+    ));
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || errorData.title || "Erro ao atualizar status da requisição");
-      }
-
-      setRequisicoes(requisicoes.map(req => 
-        req.id === requisicaoId ? { ...req, status: novoStatus.toLowerCase() } : req
-      ));
-      toast.success("Status da requisição atualizado com sucesso", { duration: 2000 });
-    } catch (err) {
-      console.error("Erro ao atualizar status:", err);
-      toast.error(error || "Erro ao atualizar status da requisição", { duration: 3000 });
-    }
-  };
+    toast.success("Status atualizado!");
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : "Falha ao atualizar");
+    console.error("Erro:", err);
+  }
+};
 
   if (loading) {
     return (

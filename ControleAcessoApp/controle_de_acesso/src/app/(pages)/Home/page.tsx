@@ -146,7 +146,7 @@ export default function Home() {
 
   const fetchUsers = async (token: string) => {
     try {
-      const response = await fetch("http://jr-notebook:7292/api/Usuarios", {
+      const response = await fetch("http://127.0.0.1:7292/api/Usuarios", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -169,7 +169,7 @@ export default function Home() {
 
   const fetchRequests = async (token: string) => {
     try {
-      const response = await fetch("http://jr-notebook:7292/api/RequisicaoDeAcesso", {
+      const response = await fetch("http://127.0.0.1:7292/api/RequisicaoDeAcesso", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -198,7 +198,7 @@ export default function Home() {
     }
 
     try {
-      const response = await fetch(`http://jr-notebook:7292/api/Usuarios/${userId}`, {
+      const response = await fetch(`http://127.0.0.1:7292/api/Usuarios/${userId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -246,7 +246,7 @@ export default function Home() {
     }
 
     try {
-      const response = await fetch(`http://jr-notebook:7292/api/Usuarios/${updatedUser.id}`, {
+      const response = await fetch(`http://127.0.0.1:7292/api/Usuarios/${updatedUser.id}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,

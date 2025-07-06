@@ -30,7 +30,7 @@ export default function Cadastro() {
     }
 
     try {
-      const response = await fetch("http://jr-notebook:7292/api/Usuarios", {
+      const response = await fetch("http://127.0.0.1:7292/api/Usuarios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nome, funcao, email, senhaHash: senha }),
