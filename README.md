@@ -96,12 +96,6 @@ Crie um arquivo `appsettings.json` ou `appsettings.Development.json` no diretór
 - Substitua `sua-senha`, `sua-chave-anonima`, e outros valores pelas credenciais reais.
 - Atualize as configurações de JWT, se a autenticação for usada (certifique-se de que a chave seja segura e não compartilhada publicamente).
 
-#### Aplicar Migrações do Banco de Dados
-Se o projeto usa Entity Framework Core, aplique as migrações para configurar o banco de dados no Supabase:
-```bash
-dotnet ef migrations add InitialCreate
-dotnet ef database update
-```
 Certifique-se de que o Supabase está acessível e que a string de conexão está correta.
 
 #### Executar a Aplicação .NET
